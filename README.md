@@ -1,6 +1,3 @@
-Thank you for clarifying. Here's the **entire `README.md` file** as **one single plain text block** — no sections broken apart, no explanation between steps — just copy-paste this entire content directly into your `README.md` file:
-
----
 
 ```markdown
 # 📝 Task Management Backend
