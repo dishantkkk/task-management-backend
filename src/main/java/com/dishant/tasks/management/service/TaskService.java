@@ -9,6 +9,7 @@ import com.dishant.tasks.management.model.User;
 import com.dishant.tasks.management.repository.TaskRepository;
 import com.dishant.tasks.management.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -18,12 +19,14 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class TaskService {
 
     private final TaskRepository taskRepository;
     private final UserRepository userRepository;
 
     public TaskResponse createTask(TaskRequest request) {
+        log.info("Creating task...");
         User user = getCurrentUser();
 
         Task task = Task.builder()
@@ -39,6 +42,7 @@ public class TaskService {
     }
 
     public List<TaskResponse> getAllTasks() {
+        log.info("Retrieving all tasks...");
         User user = getCurrentUser();
         boolean isAdmin = user.getRole().name().equals("ADMIN");
 
@@ -50,12 +54,14 @@ public class TaskService {
     }
 
     public TaskResponse getTaskById(Long id) {
+        log.info("Retrieving task by id...");
         Task task = getTaskOrThrow(id);
         checkAccess(task);
         return mapToResponse(task);
     }
 
     public TaskResponse updateTask(Long id, TaskRequest request) {
+        log.info("Updating task...");
         Task task = getTaskOrThrow(id);
         checkAccess(task);
 
@@ -68,6 +74,7 @@ public class TaskService {
     }
 
     public void deleteTask(Long id) {
+        log.info("Deleting task...");
         Task task = getTaskOrThrow(id);
         checkAccess(task);
         taskRepository.delete(task);
