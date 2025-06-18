@@ -4,6 +4,7 @@ package com.dishant.tasks.management.service;
 import com.dishant.tasks.management.dto.TaskRequest;
 import com.dishant.tasks.management.dto.TaskResponse;
 import com.dishant.tasks.management.exception.TaskNotFoundException;
+import com.dishant.tasks.management.exception.UnAuthorizedException;
 import com.dishant.tasks.management.model.Task;
 import com.dishant.tasks.management.model.User;
 import com.dishant.tasks.management.repository.TaskRepository;
@@ -50,7 +51,7 @@ public class TaskService {
                 ? taskRepository.findAll()
                 : taskRepository.findByUser(user);
 
-        return tasks.stream().map(this::mapToResponse).collect(Collectors.toList());
+        return tasks.stream().map(this::mapToResponse).toList();
     }
 
     public TaskResponse getTaskById(Long id) {
@@ -90,7 +91,7 @@ public class TaskService {
         boolean isAdmin = user.getRole().name().equals("ADMIN");
 
         if (!isAdmin && !task.getUser().getId().equals(user.getId())) {
-            throw new RuntimeException("Unauthorized access to task");
+            throw new UnAuthorizedException("Unauthorized access to task");
         }
     }
 

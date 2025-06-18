@@ -25,14 +25,14 @@ public class TaskKafkaListener {
     private final UserRepository userRepository;
 
     @KafkaListener(topics = "task-topic", groupId = "task-group")
-    public void consume(ConsumerRecord<String, TaskEventSchema> record) {
-        TaskEventSchema event = record.value();
+    public void consume(ConsumerRecord<String, TaskEventSchema> eventRecord) {
+        TaskEventSchema event = eventRecord.value();
         log.info("📥 Received task event for user '{}': {}", event.getUserName(), event.getTitle());
         LocalDate dueDate = null;
         try {
             dueDate = LocalDate.parse(event.getDueDate());
         } catch (Exception e) {
-            log.error("❌ Invalid due date format: {}", event.getDueDate(), e);
+            log.error("❌Invalid due date format: {}", event.getDueDate(), e);
             return;
         }
         Long userId = event.getUserId();
