@@ -4,20 +4,16 @@ import com.dishant.tasks.management.dto.TaskRequest;
 import com.dishant.tasks.management.dto.TaskResponse;
 import com.dishant.tasks.management.dto.UpdateTaskRequest;
 import com.dishant.tasks.management.exception.BadRequestException;
-import com.dishant.tasks.management.exception.TaskNotFoundException;
-import com.dishant.tasks.management.exception.UnAuthorizedException;
 import com.dishant.tasks.management.model.Task;
 import com.dishant.tasks.management.model.TaskStatus;
 import com.dishant.tasks.management.model.User;
 import com.dishant.tasks.management.repository.TaskRepository;
-import com.dishant.tasks.management.repository.UserRepository;
 import com.dishant.tasks.management.utils.TaskHelperUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static com.dishant.tasks.management.constants.Constants.*;
@@ -38,6 +34,7 @@ public class TaskService {
                 .title(request.getTitle())
                 .description(request.getDescription())
                 .status(request.getStatus())
+                .flag(UNFLAGGED)
                 .dueDate(request.getDueDate())
                 .user(user)
                 .build();
@@ -105,5 +102,15 @@ public class TaskService {
         taskHelper.checkAccess(task);
         taskRepository.delete(task);
         log.info("✅ Task deleted");
+    }
+
+    public void closeTask(Long id) {
+        log.info("Closing Task with ID: {}", id);
+        Task task = taskHelper.getTaskOrThrow(id);
+        task.setStatus(TaskStatus.valueOf(COMPLETED));
+        task.setUpdatedAt(LocalDateTime.now());
+
+        taskRepository.save(task);
+        log.info("Task with ID: {} marked as COMPLETED.", id);
     }
 }

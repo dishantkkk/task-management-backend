@@ -3,7 +3,6 @@ package com.dishant.tasks.management.model;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -28,7 +27,7 @@ public class Task {
 
     private String flag;
 
-    private LocalDate dueDate;
+    private LocalDateTime dueDate;
 
     private LocalDateTime createdAt;
 

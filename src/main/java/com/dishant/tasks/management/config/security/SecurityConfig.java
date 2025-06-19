@@ -1,5 +1,6 @@
-package com.dishant.tasks.management.config;
+package com.dishant.tasks.management.config.security;
 
+import com.dishant.tasks.management.config.filter.JwtFilter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -37,10 +38,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> {
                     auth.requestMatchers(
-                            "/v1/api/auth/**",
-                            "/v3/api-docs/**",
-                            "/swagger-ui/**",
-                            "/swagger-ui.html"
+                            "/actuator/**", "/v1/api/auth/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html"
                     ).permitAll();
                     auth.anyRequest().authenticated();
                     log.debug("Authorization rules applied: Auth endpoints are publicly accessible");
