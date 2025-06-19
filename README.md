@@ -1,28 +1,60 @@
 
-```markdown
 # 📝 Task Management Backend
 
-A Spring Boot application with JWT-based authentication and role-based access control (User/Admin), designed as the backend for a full-stack Task Management app.
+A Spring Boot 3.5.0 application for managing tasks with robust backend capabilities including JWT-based authentication, role-based authorization, task scheduling, Kafka integration, Redis-based locking, health monitoring, and developer-friendly tooling.
+
+---
 
 ## 🔐 Features
 
-- User registration & login with JWT
-- Role-based access: `ROLE_USER`, `ROLE_ADMIN`
-- Task CRUD for authenticated users
-- Global Exception Handling with meaningful error responses
-- Swagger UI with JWT Authorize button
-- Spring Security 6, MySQL, Hibernate Validator
+### ✅ Authentication & Authorization
+- JWT-based login with Spring Security 6
+- Role-based access (`ROLE_USER`, `ROLE_ADMIN`)
+- Secure endpoints for task operations
+
+### 📋 Task Management
+- Task CRUD: Create, Read, Update, Delete
+- Tasks include: `title`, `description`, `dueDate`, `flag` (completed status), `userId`, etc.
+- Toggle completion using `Flag/Unflag` button
+- Inline task view with "Delete" and "Flag/Unflag"
+- Only update task status via flag APIs using DTOs
+
+### 🕒 Scheduled Task Closure
+- Automatically close tasks past their due date
+- Distributed locking via Redis + ShedLock
+- System-aware logging for each scheduler execution
+- Scheduler logs stored in DB (`SchedulerLog` entity)
+
+### 🔁 Kafka + Avro Integration
+- Kafka producer for task events
+- Avro serialization and Schema Registry support
+- Sample task events ingestion via `data.json` (non-array format)
+
+### 🧪 Developer Tools & Observability
+- Swagger UI + JWT Auth Support
+- Spring Boot Actuator endpoints (`/actuator/health`)
+- Pretty JSON logs (Logback + Logstash encoder)
+- SonarQube analysis
+- JaCoCo test coverage reports
+
+---
 
 ## ⚙️ Tech Stack
 
-- Java 17+
-- Spring Boot 3.x
+- Java 21
+- Spring Boot 3.5.x
 - Spring Security 6
-- MySQL
+- Spring Scheduler + Redis + ShedLock
+- Spring Data JPA (MySQL)
+- Kafka, Avro, Schema Registry
+- Docker Compose
+- Swagger/OpenAPI
 - JWT (JJWT)
 - Lombok
-- Hibernate Validator
-- Swagger / OpenAPI
+- SonarQube
+- Jacoco
+
+---
 
 ## 🚀 Getting Started
 
@@ -33,115 +65,58 @@ git clone https://github.com/yourusername/task-management-backend.git
 cd task-management-backend
 ```
 
-### 2. Set up MySQL database
+### 2. Setup MySQL
 
-Create a MySQL database (e.g., `taskdb`):
-
+Create DB:
 ```sql
-CREATE DATABASE taskdb;
+CREATE DATABASE task_db;
 ```
 
-### 3. Configure application.yml
+### 3. Docker Compose Setup
 
-Edit `src/main/resources/application.yml`:
-
-```yaml
-spring:
-  datasource:
-    url: jdbc:mysql://localhost:3306/taskdb
-    username: your_mysql_username
-    password: your_mysql_password
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: true
-  application:
-    name: task-manager
-server:
-  port: 8080
-```
-
-### 4. Run the application
-
-Using terminal:
+Ensure Docker is installed and run:
 
 ```bash
-./mvnw spring-boot:run
+docker compose up -d
 ```
 
-Or run `TaskManagerApplication` class from your IDE.
+This brings up:
+- Zookeeper
+- Kafka
+- Schema Registry
+- Redis
+- MySQL
 
-## 🔑 API Authentication Flow
+---
 
-### Register
+## ✅ Current Functional Summary
 
-`POST /api/v1/auth/register`
+| Feature                       | Status   |
+|------------------------------|----------|
+| JWT Login + Role-Based Auth  | ✅ Done  |
+| CRUD Task APIs               | ✅ Done  |
+| Flag/Unflag (completion)     | ✅ Done  |
+| Inline task view with actions| ✅ Done  |
+| Redis + ShedLock Scheduler   | ✅ Done  |
+| Kafka Avro Event Producer    | ✅ Done  |
+| Swagger UI + JWT Support     | ✅ Done  |
+| Docker Compose Services      | ✅ Done  |
+| Actuator Health Checks       | ✅ Done  |
+| Sonar + JaCoCo Integration   | ✅ Done  |
 
-```json
-{
-  "username": "testuser",
-  "password": "testpass",
-  "role": "USER"
-}
-```
+---
 
-### Login
+## 🧠 Future Enhancements
 
-`POST /api/v1/auth/login`
+- ✅ Pagination & filtering in task APIs
+- ✅ Kafka consumer for task events
+- ✅ Admin dashboard APIs
+- ✅ Task priority, labels, and status
+- ✅ Comment support per task
+- ✅ Audit logs and changelogs
+- ✅ Prometheus + Grafana metrics
+- ✅ Dockerize backend with Dockerfile
+- ✅ CI/CD pipeline with GitHub Actions
+- ✅ Email reminders or Slack alerts for due tasks
 
-```json
-{
-  "username": "testuser",
-  "password": "testpass"
-}
-```
-
-📥 Response includes a JWT token.
-
-## 🧪 Swagger UI
-
-Once the app is running, open:
-
-```
-http://localhost:8080/swagger-ui/index.html
-```
-
-- Click “Authorize” button
-- Enter: `Bearer <your_jwt_token>` to test secured APIs
-
-## 📂 Project Structure
-
-```
-com.example.taskmanager
-├── auth                 → AuthController, AuthService, Login/Register DTOs
-├── config               → SecurityConfig, OpenAPIConfig
-├── controller           → TaskController
-├── dto                  → Request/Response objects
-├── entity               → User, Task
-├── exception            → Custom Exceptions + Global Handler
-├── repository           → UserRepository, TaskRepository
-├── security             → JwtUtil, JwtFilter
-├── service              → TaskService, AuthService
-```
-
-## 💻 Build & Test
-
-Build:
-
-```bash
-./mvnw clean install
-```
-
-Run tests (if added):
-
-```bash
-./mvnw test
-```
-
-## 🔧 Future Enhancements
-
-- Task priority and deadline support
-- Task status (Pending, In Progress, Completed)
-- Pagination and sorting
-- React frontend
-
+---
