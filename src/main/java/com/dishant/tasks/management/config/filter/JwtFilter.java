@@ -1,4 +1,4 @@
-package com.dishant.tasks.management.config;
+package com.dishant.tasks.management.config.filter;
 
 import com.dishant.tasks.management.service.JwtService;
 import lombok.RequiredArgsConstructor;
@@ -34,7 +34,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
         try {
             // Skip authentication for public endpoints
-            if (path.startsWith("/v1/api/auth") || path.startsWith("/v3/api-docs") || path.startsWith("/swagger-ui")) {
+            if (path.startsWith("/v1/api/auth") || path.startsWith("/actuator") || path.startsWith("/v3/api-docs") || path.startsWith("/swagger-ui")) {
                 log.debug("Skipping JWT filter for path: {}", path);
                 filterChain.doFilter(request, response);
                 return;

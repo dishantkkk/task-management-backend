@@ -1,1 +1,13 @@
-{"title":"Complete Kafka Integration","description":"Implement Kafka consumer for task creation","dueDate":"2025-06-20","userId":1,"userName":"user1","userRole":"USER"}
+{"title":"Buy groceries","description":"Milk, Bread, Eggs","dueDate":"2025-06-20T09:00:00","userId":102,"userName":"dishant","userRole":"USER"}
+{"title":"Call the plumber","description":"Fix kitchen sink","dueDate":"2025-06-21T11:30:00","userId":102,"userName":"dishant","userRole":"USER"}
+{"title":"Submit tax documents","description":"Upload on portal before deadline","dueDate":"2025-06-22T17:00:00","userId":102,"userName":"dishant","userRole":"USER"}
+{"title":"Doctor appointment","description":"Annual health checkup at 10 AM","dueDate":"2025-06-20T10:00:00","userId":103,"userName":"manisha","userRole":"USER"}
+{"title":"Team meeting","description":"Discuss project milestones","dueDate":"2025-06-21T15:00:00","userId":103,"userName":"manisha","userRole":"USER"}
+{"title":"Laundry","description":"Wash and fold clothes","dueDate":"2025-06-22T18:30:00","userId":103,"userName":"manisha","userRole":"USER"}
+{"title":"Pay electricity bill","description":"Due by 25th","dueDate":"2025-06-23T23:59:00","userId":103,"userName":"manisha","userRole":"USER"}
+{"title":"Pick up medicine","description":"Get prescription from pharmacy","dueDate":"2025-06-20T13:45:00","userId":104,"userName":"imran","userRole":"USER"}
+{"title":"Grocery shopping","description":"Vegetables and fruits","dueDate":"2025-06-21T10:15:00","userId":104,"userName":"imran","userRole":"USER"}
+{"title":"Car service","description":"Drop off car for regular maintenance","dueDate":"2025-06-22T08:00:00","userId":104,"userName":"imran","userRole":"USER"}
+{"title":"Gym session","description":"Leg day workout","dueDate":"2025-06-20T07:00:00","userId":105,"userName":"ajay","userRole":"USER"}
+{"title":"Water plants","description":"Morning plant care","dueDate":"2025-06-21T06:30:00","userId":105,"userName":"ajay","userRole":"USER"}
+{"title":"Watch webinar","description":"Topic: Time Management","dueDate":"2025-06-22T20:00:00","userId":105,"userName":"ajay","userRole":"USER"}

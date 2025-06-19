@@ -6,7 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Data
 @Builder
@@ -16,5 +16,5 @@ public class TaskRequest {
     private String title;
     private String description;
     private TaskStatus status;
-    private LocalDate dueDate;
+    private LocalDateTime dueDate;
 }

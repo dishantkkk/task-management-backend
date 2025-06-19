@@ -1,21 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration scan="true">
 
-    <!-- Log directory and file name -->
-    <property name="LOG_PATH" value="logs" />
-    <property name="LOG_FILE_NAME" value="app-log" />
+    <!--<property name="LOG_PATH" value="logs" />
+    <property name="LOG_FILE_NAME" value="app-log" />-->
 
     <!-- Console appender with color pattern -->
-    <appender name="Console" class="ch.qos.logback.core.ConsoleAppender">
+    <!--<appender name="Console" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <pattern>
                 %highlight(%d{yyyy-MM-dd HH:mm:ss.SSS}) [%thread] %-5level %cyan(%logger{36}) - %msg%n
             </pattern>
         </encoder>
+    </appender>-->
+    <appender name="Console" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>
+                %highlight(%d{yyyy-MM-dd HH:mm:ss.SSS}) %magenta([%.-15thread]) %highlight(%-5level) %cyan(%logger{20}) %yellow([%M]) - %msg%n
+            </pattern>
+        </encoder>
     </appender>
 
     <!-- Rolling file appender -->
-    <appender name="RollingFile" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <!--<appender name="RollingFile" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${LOG_PATH}/${LOG_FILE_NAME}.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <fileNamePattern>${LOG_PATH}/${LOG_FILE_NAME}.%d{yyyy-MM-dd}.log</fileNamePattern>
@@ -26,17 +32,16 @@
                 %d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n
             </pattern>
         </encoder>
-    </appender>
+    </appender>-->
 
-    <!-- Root logger -->
     <root level="INFO">
         <appender-ref ref="Console" />
-        <appender-ref ref="RollingFile" />
+        <!--<appender-ref ref="RollingFile" />-->
     </root>
 
-    <!-- App-specific logs -->
     <logger name="com.dishant.tasks" level="DEBUG" />
     <logger name="org.springframework" level="INFO" />
+    <logger name="org.hibernate.SQL" level="WARN" />
 
 </configuration>
 

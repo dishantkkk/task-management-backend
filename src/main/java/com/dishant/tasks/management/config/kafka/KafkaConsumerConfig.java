@@ -1,4 +1,4 @@
-package com.dishant.tasks.management.config;
+package com.dishant.tasks.management.config.kafka;
 
 import com.example.kafka.avro.TaskEventSchema;
 import io.confluent.kafka.serializers.KafkaAvroDeserializer;

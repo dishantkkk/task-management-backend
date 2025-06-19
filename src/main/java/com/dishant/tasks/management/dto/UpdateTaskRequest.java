@@ -7,7 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Data
 @Builder
@@ -20,7 +20,7 @@ public class UpdateTaskRequest {
     private String title;
     @NotBlank(message = "Description can't be blank!")
     private String description;
-    private LocalDate dueDate;
+    private LocalDateTime dueDate;
     @NotBlank(message = "Type can't be blank!")
     private String type;
     @NotBlank(message = "Value can't be blank!")

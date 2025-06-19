@@ -1,4 +1,4 @@
-package com.dishant.tasks.management.config;
+package com.dishant.tasks.management.config.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

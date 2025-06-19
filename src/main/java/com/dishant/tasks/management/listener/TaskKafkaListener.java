@@ -12,7 +12,9 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
+
+import static com.dishant.tasks.management.constants.Constants.UNFLAGGED;
 
 @Component
 @RequiredArgsConstructor
@@ -28,9 +30,9 @@ public class TaskKafkaListener {
         log.info("📥 Processing task event from Kafka for user '{}': {}", event.getUserName(), event.getTitle());
 
         // ✅ Parse due date
-        LocalDate dueDate;
+        LocalDateTime dueDate;
         try {
-            dueDate = LocalDate.parse(event.getDueDate());
+            dueDate = LocalDateTime.parse(event.getDueDate());
         } catch (Exception e) {
             log.error("❌ Invalid due date format '{}', skipping task: {}", event.getDueDate(), event.getTitle(), e);
             return;
@@ -56,6 +58,7 @@ public class TaskKafkaListener {
                 .title(event.getTitle())
                 .description(event.getDescription())
                 .dueDate(dueDate)
+                .flag(UNFLAGGED)
                 .status(TaskStatus.PENDING)
                 .user(user)
                 .build();
