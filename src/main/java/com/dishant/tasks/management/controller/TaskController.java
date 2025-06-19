@@ -1,5 +1,6 @@
 package com.dishant.tasks.management.controller;
 
+import com.dishant.tasks.management.dto.UpdateTaskRequest;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -21,33 +22,36 @@ public class TaskController {
 
     @PostMapping
     public ResponseEntity<TaskResponse> createTask(@RequestBody TaskRequest request) {
-        log.info("Received request to create task!");
-        return ResponseEntity.ok(taskService.createTask(request));
+        log.info("Creating task: {}", request);
+        TaskResponse response = taskService.createTask(request);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping
     public ResponseEntity<List<TaskResponse>> getAllTasks() {
-        log.info("Received request to get all tasks!");
-        return ResponseEntity.ok(taskService.getAllTasks());
+        log.info("Fetching all tasks");
+        List<TaskResponse> tasks = taskService.getAllTasks();
+        log.debug("Total tasks: {}", tasks.size());
+        return ResponseEntity.ok(tasks);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<TaskResponse> getTaskById(@PathVariable Long id) {
-        log.info("Received request to get task by id!");
-        return ResponseEntity.ok(taskService.getTaskById(id));
+        log.info("Fetching task by ID: {}", id);
+        TaskResponse task = taskService.getTaskById(id);
+        return ResponseEntity.ok(task);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<TaskResponse> updateTask(
-            @PathVariable Long id,
-            @RequestBody TaskRequest request) {
-        log.info("Received request to update task!");
-        return ResponseEntity.ok(taskService.updateTask(id, request));
+    public ResponseEntity<TaskResponse> updateTask(@PathVariable Long id, @RequestBody UpdateTaskRequest updateTaskRequest) {
+        log.info("Updating task ID: {}", id);
+        TaskResponse updated = taskService.updateTask(id, updateTaskRequest);
+        return ResponseEntity.ok(updated);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteTask(@PathVariable Long id) {
-        log.info("Received request to delete task!");
+        log.info("Deleting task ID: {}", id);
         taskService.deleteTask(id);
         return ResponseEntity.noContent().build();
     }

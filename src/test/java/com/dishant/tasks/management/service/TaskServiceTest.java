@@ -2,6 +2,7 @@ package com.dishant.tasks.management.service;
 
 import com.dishant.tasks.management.dto.TaskRequest;
 import com.dishant.tasks.management.dto.TaskResponse;
+import com.dishant.tasks.management.dto.UpdateTaskRequest;
 import com.dishant.tasks.management.exception.TaskNotFoundException;
 import com.dishant.tasks.management.model.Role;
 import com.dishant.tasks.management.model.Task;
@@ -36,6 +37,7 @@ class TaskServiceTest {
     private User user;
     private Task task;
     private TaskRequest taskRequest;
+    private UpdateTaskRequest updateTaskRequest;
 
     @BeforeEach
     void setUp() {
@@ -48,19 +50,24 @@ class TaskServiceTest {
                 .role(Role.USER)
                 .build();
 
+        updateTaskRequest = UpdateTaskRequest.builder()
+                .title("Test Task")
+                .type("flag")
+                .description("Description")
+                .dueDate(LocalDate.now().plusDays(1))
+                .build();
+
         taskRequest = TaskRequest.builder()
                 .title("Test Task")
                 .description("Description")
-                .status(TaskStatus.PENDING)
                 .dueDate(LocalDate.now().plusDays(1))
                 .build();
 
         task = Task.builder()
                 .id(1L)
-                .title(taskRequest.getTitle())
-                .description(taskRequest.getDescription())
-                .status(taskRequest.getStatus())
-                .dueDate(taskRequest.getDueDate())
+                .title(updateTaskRequest.getTitle())
+                .description(updateTaskRequest.getDescription())
+                .dueDate(updateTaskRequest.getDueDate())
                 .user(user)
                 .build();
 
@@ -134,7 +141,7 @@ class TaskServiceTest {
         when(taskRepository.findById(1L)).thenReturn(Optional.of(task));
         when(taskRepository.save(any(Task.class))).thenReturn(task);
 
-        TaskResponse response = taskService.updateTask(1L, taskRequest);
+        TaskResponse response = taskService.updateTask(1L, updateTaskRequest);
 
         assertEquals(task.getTitle(), response.getTitle());
     }
@@ -144,7 +151,7 @@ class TaskServiceTest {
         task.setUser(User.builder().id(2L).username("other").role(Role.USER).build());
         when(taskRepository.findById(1L)).thenReturn(Optional.of(task));
 
-        assertThrows(RuntimeException.class, () -> taskService.updateTask(1L, taskRequest));
+        assertThrows(RuntimeException.class, () -> taskService.updateTask(1L, updateTaskRequest));
     }
 
     @Test

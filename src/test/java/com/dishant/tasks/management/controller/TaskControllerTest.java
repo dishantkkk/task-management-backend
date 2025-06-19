@@ -2,6 +2,7 @@ package com.dishant.tasks.management.controller;
 
 import com.dishant.tasks.management.dto.TaskRequest;
 import com.dishant.tasks.management.dto.TaskResponse;
+import com.dishant.tasks.management.dto.UpdateTaskRequest;
 import com.dishant.tasks.management.model.TaskStatus;
 import com.dishant.tasks.management.service.TaskService;
 import org.junit.jupiter.api.BeforeEach;
@@ -89,10 +90,9 @@ class TaskControllerTest {
 
     @Test
     void testUpdateTask() {
-        TaskRequest updatedRequest = TaskRequest.builder()
+        UpdateTaskRequest updatedRequest = UpdateTaskRequest.builder()
                 .title("Updated Task")
                 .description("Updated Description")
-                .status(TaskStatus.COMPLETED)
                 .dueDate(LocalDate.now().plusDays(1))
                 .build();
 

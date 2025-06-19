@@ -1,4 +1,3 @@
-
 package com.dishant.tasks.management.config;
 
 import com.dishant.tasks.management.service.JwtService;
@@ -27,37 +26,49 @@ public class JwtFilter extends OncePerRequestFilter {
     private final UserDetailsService userDetailsService;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-            throws ServletException, IOException {
-        log.info(">>> JwtFilter Executing: {}", request.getRequestURI());
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain filterChain) throws ServletException, IOException {
         final String path = request.getRequestURI();
+        log.debug("JwtFilter processing request: {}", path);
 
-        // 🚫 Skip authentication for /auth endpoints
-        if (path.startsWith("/v1/api/auth") || path.startsWith("/v3/api-docs") || path.startsWith("/swagger-ui")) {
-            log.info(">>> JwtFilter skipping for: {}", request.getRequestURI());
-            filterChain.doFilter(request, response);
-            return;
-        }
-
-        final String authHeader = request.getHeader("Authorization");
-
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-
-        final String jwt = authHeader.substring(7);
-        final String username = jwtService.extractUsername(jwt);
-        log.info("Extracted username: {}", username);
-
-        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-            if (jwtService.isValid(jwt, userDetails)) {
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                        userDetails, null, userDetails.getAuthorities());
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+        try {
+            // Skip authentication for public endpoints
+            if (path.startsWith("/v1/api/auth") || path.startsWith("/v3/api-docs") || path.startsWith("/swagger-ui")) {
+                log.debug("Skipping JWT filter for path: {}", path);
+                filterChain.doFilter(request, response);
+                return;
             }
+
+            final String authHeader = request.getHeader("Authorization");
+
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                log.debug("No valid Authorization header found. Skipping authentication.");
+                filterChain.doFilter(request, response);
+                return;
+            }
+
+            final String jwt = authHeader.substring(7);
+            final String username = jwtService.extractUsername(jwt);
+            log.debug("Extracted username from token: {}", username);
+
+            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                if (jwtService.isValid(jwt, userDetails)) {
+                    log.info("JWT validated successfully for user: {}", username);
+
+                    UsernamePasswordAuthenticationToken authToken =
+                            new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                } else {
+                    log.warn("Invalid JWT token for user: {}", username);
+                }
+            }
+
+        } catch (Exception ex) {
+            log.error("Exception during JWT processing: {}", ex.getMessage(), ex);
         }
 
         filterChain.doFilter(request, response);

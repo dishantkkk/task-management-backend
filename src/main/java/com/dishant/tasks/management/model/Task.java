@@ -26,6 +26,8 @@ public class Task {
     @Enumerated(EnumType.STRING)
     private TaskStatus status;
 
+    private String flag;
+
     private LocalDate dueDate;
 
     private LocalDateTime createdAt;
@@ -40,6 +42,7 @@ public class Task {
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = createdAt;
+        flag = "Unflagged";
     }
 
     @PreUpdate

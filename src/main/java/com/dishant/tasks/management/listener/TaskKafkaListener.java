@@ -1,12 +1,10 @@
 package com.dishant.tasks.management.listener;
 
-import com.dishant.tasks.management.dto.TaskRequest;
 import com.dishant.tasks.management.model.Task;
 import com.dishant.tasks.management.model.TaskStatus;
 import com.dishant.tasks.management.model.User;
 import com.dishant.tasks.management.repository.TaskRepository;
 import com.dishant.tasks.management.repository.UserRepository;
-import com.dishant.tasks.management.service.TaskService;
 import com.example.kafka.avro.TaskEventSchema;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,22 +25,33 @@ public class TaskKafkaListener {
     @KafkaListener(topics = "task-topic", groupId = "task-group")
     public void consume(ConsumerRecord<String, TaskEventSchema> eventRecord) {
         TaskEventSchema event = eventRecord.value();
-        log.info("📥 Received task event for user '{}': {}", event.getUserName(), event.getTitle());
-        LocalDate dueDate = null;
+        log.info("📥 Processing task event from Kafka for user '{}': {}", event.getUserName(), event.getTitle());
+
+        // ✅ Parse due date
+        LocalDate dueDate;
         try {
             dueDate = LocalDate.parse(event.getDueDate());
         } catch (Exception e) {
-            log.error("❌Invalid due date format: {}", event.getDueDate(), e);
-            return;
-        }
-        Long userId = event.getUserId();
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found for ID: " + userId));
-        if(!user.getUsername().equals(event.getUserName())) {
-            log.error("Wrong user!");
+            log.error("❌ Invalid due date format '{}', skipping task: {}", event.getDueDate(), event.getTitle(), e);
             return;
         }
 
+        // ✅ Validate user
+        Long userId = event.getUserId();
+        User user = userRepository.findById(userId)
+                .orElse(null);
+
+        if (user == null) {
+            log.error("❌ User not found for ID '{}'. Task '{}' skipped.", userId, event.getTitle());
+            return;
+        }
+
+        if (!user.getUsername().equals(event.getUserName())) {
+            log.error("❌ Username mismatch for user ID '{}'. Expected '{}', but got '{}'.", userId, user.getUsername(), event.getUserName());
+            return;
+        }
+
+        // ✅ Save task
         Task task = Task.builder()
                 .title(event.getTitle())
                 .description(event.getDescription())
@@ -52,6 +61,6 @@ public class TaskKafkaListener {
                 .build();
 
         Task saved = taskRepository.save(task);
-        log.info("✅ Task created from Kafka: {}", saved.getTitle());
+        log.info("✅ Task '{}' saved successfully from Kafka for user '{}'", saved.getTitle(), user.getUsername());
     }
 }
