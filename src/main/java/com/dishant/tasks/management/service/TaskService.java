@@ -50,8 +50,8 @@ public class TaskService {
         boolean isAdmin = taskHelper.isAdmin(user);
 
         List<Task> tasks = isAdmin
-                ? taskRepository.findAll()
-                : taskRepository.findByUser(user);
+                ? taskRepository.findByStatusNot(TaskStatus.COMPLETED)
+                : taskRepository.findByUserAndStatusNot(user, TaskStatus.COMPLETED);
 
         log.info("✅ Found {} tasks", tasks.size());
         return tasks.stream().map(taskHelper::mapToResponse).toList();
