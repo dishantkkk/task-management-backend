@@ -21,6 +21,7 @@ public class TaskResponse {
     private LocalDateTime dueDate;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private String flag;
     private String username;  // who created the task
     private TaskPriority priority;
 }

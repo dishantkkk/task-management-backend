@@ -59,6 +59,7 @@ public class TaskHelperUtil {
                 .dueDate(task.getDueDate())
                 .createdAt(task.getCreatedAt())
                 .updatedAt(task.getUpdatedAt())
+                .flag(task.getFlag())
                 .username(task.getUser().getUsername())
                 .priority(task.getPriority())
                 .build();
