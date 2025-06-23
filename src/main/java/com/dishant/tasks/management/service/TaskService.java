@@ -5,6 +5,7 @@ import com.dishant.tasks.management.dto.TaskResponse;
 import com.dishant.tasks.management.dto.UpdateTaskRequest;
 import com.dishant.tasks.management.exception.BadRequestException;
 import com.dishant.tasks.management.model.Task;
+import com.dishant.tasks.management.model.TaskPriority;
 import com.dishant.tasks.management.model.TaskStatus;
 import com.dishant.tasks.management.model.User;
 import com.dishant.tasks.management.repository.TaskRepository;
@@ -37,6 +38,7 @@ public class TaskService {
                 .flag(UNFLAGGED)
                 .dueDate(request.getDueDate())
                 .user(user)
+                .priority(request.getPriority() != null ? request.getPriority() : TaskPriority.MEDIUM)
                 .build();
 
         Task savedTask = taskRepository.save(task);
@@ -67,6 +69,8 @@ public class TaskService {
     public TaskResponse updateTask(Long id, UpdateTaskRequest updateTaskRequest) {
         log.info("Updating task with ID: {}", id);
 
+        System.out.println(updateTaskRequest.toString());
+
         if (updateTaskRequest.getType() == null || updateTaskRequest.getType().isEmpty()) {
             log.warn("❌ Update type is missing for task ID: {}", id);
             throw new BadRequestException("Invalid Request!");
@@ -84,13 +88,12 @@ public class TaskService {
                 task.setFlag(updateTaskRequest.getValue());
                 log.info("✅ Task flag updated to {}", updateTaskRequest.getValue());
             }
-            default -> {
-                task.setTitle(updateTaskRequest.getTitle());
-                task.setDescription(updateTaskRequest.getDescription());
-                task.setDueDate(updateTaskRequest.getDueDate());
-                log.info("✅ Task content updated");
-            }
         }
+        task.setTitle(updateTaskRequest.getTitle());
+        task.setDescription(updateTaskRequest.getDescription());
+        task.setDueDate(updateTaskRequest.getDueDate());
+        task.setPriority(updateTaskRequest.getPriority());
+        log.info("✅ Task content updated");
 
         Task updatedTask = taskRepository.save(task);
         return taskHelper.mapToResponse(updatedTask);

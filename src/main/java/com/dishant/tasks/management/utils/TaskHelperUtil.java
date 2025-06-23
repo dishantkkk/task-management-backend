@@ -60,6 +60,7 @@ public class TaskHelperUtil {
                 .createdAt(task.getCreatedAt())
                 .updatedAt(task.getUpdatedAt())
                 .username(task.getUser().getUsername())
+                .priority(task.getPriority())
                 .build();
     }
 }

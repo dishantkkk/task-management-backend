@@ -42,7 +42,7 @@ management:
       show-details: always  # Show full health details
 
 scheduler:
-  cron: "0 */5 * * * *"
+  cron: "0 0 * * * *"
 
 jwt:
   secret: averysecuresecretkeyformyjwtapp1234567890

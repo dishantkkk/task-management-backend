@@ -18,7 +18,7 @@ import java.util.List;
 @Configuration
 @Slf4j
 @AllArgsConstructor
-public class TaskScheduler {
+public class TaskSchedulerService {
 
     private TaskLockService taskLockService;
     private TaskRepository taskRepository;

@@ -37,6 +37,9 @@ public class Task {
     @JoinColumn(name = "user_id")
     private User user;
 
+    @Enumerated(EnumType.STRING)
+    private TaskPriority priority = TaskPriority.MEDIUM;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();

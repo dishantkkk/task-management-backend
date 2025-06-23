@@ -1,5 +1,6 @@
 package com.dishant.tasks.management.dto;
 
+import com.dishant.tasks.management.model.TaskPriority;
 import com.dishant.tasks.management.model.TaskStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -17,4 +18,5 @@ public class TaskRequest {
     private String description;
     private TaskStatus status;
     private LocalDateTime dueDate;
+    private TaskPriority priority;
 }

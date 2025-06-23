@@ -1,11 +1,9 @@
 package com.dishant.tasks.management.dto;
 
+import com.dishant.tasks.management.model.TaskPriority;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
@@ -13,6 +11,7 @@ import java.time.LocalDateTime;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@ToString
 public class UpdateTaskRequest {
     @NotNull(message = "Id is required!")
     private Long id;
@@ -25,4 +24,5 @@ public class UpdateTaskRequest {
     private String type;
     @NotBlank(message = "Value can't be blank!")
     private String value;
+    private TaskPriority priority;
 }
