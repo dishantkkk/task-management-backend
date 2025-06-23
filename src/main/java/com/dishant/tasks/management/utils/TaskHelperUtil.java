@@ -61,6 +61,7 @@ public class TaskHelperUtil {
                 .updatedAt(task.getUpdatedAt())
                 .flag(task.getFlag())
                 .username(task.getUser().getUsername())
+                .assignedToUsername(task.getAssignedTo() != null ? task.getAssignedTo().getUsername() : null)
                 .priority(task.getPriority())
                 .build();
     }

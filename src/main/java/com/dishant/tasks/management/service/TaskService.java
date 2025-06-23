@@ -4,11 +4,13 @@ import com.dishant.tasks.management.dto.TaskRequest;
 import com.dishant.tasks.management.dto.TaskResponse;
 import com.dishant.tasks.management.dto.UpdateTaskRequest;
 import com.dishant.tasks.management.exception.BadRequestException;
+import com.dishant.tasks.management.exception.ResourceNotFoundException;
 import com.dishant.tasks.management.model.Task;
 import com.dishant.tasks.management.model.TaskPriority;
 import com.dishant.tasks.management.model.TaskStatus;
 import com.dishant.tasks.management.model.User;
 import com.dishant.tasks.management.repository.TaskRepository;
+import com.dishant.tasks.management.repository.UserRepository;
 import com.dishant.tasks.management.utils.TaskHelperUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,10 +28,16 @@ public class TaskService {
 
     private final TaskRepository taskRepository;
     private final TaskHelperUtil taskHelper;
+    private final UserRepository userRepository;
 
     public TaskResponse createTask(TaskRequest request) {
         log.info("Creating task...");
-        User user = taskHelper.getCurrentUser();
+        User currentUser = taskHelper.getCurrentUser();
+        User assignedToUser = currentUser;
+        if (taskHelper.isAdmin(currentUser) && request.getAssignedToId() != null) {
+            assignedToUser = userRepository.findById(request.getAssignedToId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Assigned user not found"));
+        }
 
         Task task = Task.builder()
                 .title(request.getTitle())
@@ -37,7 +45,8 @@ public class TaskService {
                 .status(request.getStatus())
                 .flag(UNFLAGGED)
                 .dueDate(request.getDueDate())
-                .user(user)
+                .user(currentUser)
+                .assignedTo(assignedToUser)
                 .priority(request.getPriority() != null ? request.getPriority() : TaskPriority.MEDIUM)
                 .build();
 
@@ -69,14 +78,13 @@ public class TaskService {
     public TaskResponse updateTask(Long id, UpdateTaskRequest updateTaskRequest) {
         log.info("Updating task with ID: {}", id);
 
-        System.out.println(updateTaskRequest.toString());
-
         if (updateTaskRequest.getType() == null || updateTaskRequest.getType().isEmpty()) {
             log.warn("❌ Update type is missing for task ID: {}", id);
             throw new BadRequestException("Invalid Request!");
         }
 
         Task task = taskHelper.getTaskOrThrow(id);
+        User currentUser = taskHelper.getCurrentUser();
         taskHelper.checkAccess(task);
 
         switch (updateTaskRequest.getType()) {
@@ -93,7 +101,13 @@ public class TaskService {
         task.setDescription(updateTaskRequest.getDescription());
         task.setDueDate(updateTaskRequest.getDueDate());
         task.setPriority(updateTaskRequest.getPriority());
-        log.info("✅ Task content updated");
+
+        if (taskHelper.isAdmin(currentUser) && updateTaskRequest.getAssignedToId() != null) {
+            User assignedUser = userRepository.findById(updateTaskRequest.getAssignedToId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Assigned user not found"));
+            task.setAssignedTo(assignedUser);
+            log.info("✅ Task reassigned to user ID {}", assignedUser.getId());
+        }
 
         Task updatedTask = taskRepository.save(task);
         return taskHelper.mapToResponse(updatedTask);

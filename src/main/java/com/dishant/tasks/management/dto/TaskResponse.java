@@ -23,5 +23,6 @@ public class TaskResponse {
     private LocalDateTime updatedAt;
     private String flag;
     private String username;  // who created the task
+    private String assignedToUsername;
     private TaskPriority priority;
 }

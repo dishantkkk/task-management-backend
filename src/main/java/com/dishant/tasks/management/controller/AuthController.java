@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,14 +24,14 @@ public class AuthController {
 
     private final AuthenticationManager authManager;
     private final JwtService jwtService;
-    private final UserRepository userRepo;
+    private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
     @PostMapping("/register")
     public ResponseEntity<String> register(@RequestBody AuthRequest request) {
         log.info("Received request to register user: {}", request.getUsername());
 
-        if (userRepo.findByUsername(request.getUsername()).isPresent()) {
+        if (userRepository.findByUsername(request.getUsername()).isPresent()) {
             log.warn("Username already exists: {}", request.getUsername());
             return ResponseEntity.badRequest().body("Username already exists");
         }
@@ -41,7 +42,7 @@ public class AuthController {
                 .role(Role.USER)
                 .build();
 
-        userRepo.save(user);
+        userRepository.save(user);
         log.info("User registered successfully: {}", request.getUsername());
 
         return ResponseEntity.ok("User registered");
@@ -55,8 +56,10 @@ public class AuthController {
                 new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
 
         String token = jwtService.generateToken(auth.getPrincipal());
+        User user = userRepository.findByUsername(request.getUsername())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
         log.info("JWT generated successfully for user: {}", request.getUsername());
 
-        return ResponseEntity.ok(new AuthResponse(token));
+        return ResponseEntity.ok(new AuthResponse(token, user.getRole().name()));
     }
 }

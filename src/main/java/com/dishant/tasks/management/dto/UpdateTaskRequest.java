@@ -25,4 +25,5 @@ public class UpdateTaskRequest {
     @NotBlank(message = "Value can't be blank!")
     private String value;
     private TaskPriority priority;
+    private Long assignedToId;
 }
