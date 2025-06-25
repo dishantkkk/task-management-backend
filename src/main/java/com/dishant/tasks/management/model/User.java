@@ -15,11 +15,22 @@ public class User {
     @GeneratedValue
     private Long id;
 
-    @Column(unique = true)
+    private String name;
+
+    @Column(unique = true, nullable = false)
     private String username;
+
+    @Column(unique = true, nullable = false)
+    private String email;
 
     private String password;
 
     @Enumerated(EnumType.STRING)
     private Role role;
+
+    @Column(nullable = false)
+    private boolean enabled = false;
+
+    @Column
+    private String verificationToken;
 }

@@ -9,6 +9,7 @@ import com.dishant.tasks.management.repository.TaskRepository;
 import com.dishant.tasks.management.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
@@ -22,11 +23,21 @@ public class TaskHelperUtil {
     private final UserRepository userRepository;
 
     public User getCurrentUser() {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        return userRepository.findByUsername(username)
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated()) {
+            log.error("❌ No authenticated user found");
+            throw new RuntimeException("Unauthorized");
+        }
+
+        String identifier = authentication.getName();
+        log.debug("🔍 Looking for user by identifier: {}", identifier);
+
+        return userRepository.findByUsername(identifier)
+                .or(() -> userRepository.findByEmail(identifier))
                 .orElseThrow(() -> {
-                    log.error("❌ Authenticated user not found: {}", username);
-                    return new UsernameNotFoundException("User not found");
+                    log.error("❌ Authenticated user not found: {}", identifier);
+                    return new UsernameNotFoundException("User not found: " + identifier);
                 });
     }
 

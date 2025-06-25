@@ -1,4 +1,3 @@
-
 package com.dishant.tasks.management.dto;
 
 import lombok.AllArgsConstructor;
@@ -8,9 +7,12 @@ import lombok.NoArgsConstructor;
 
 @Data
 @Builder
-@NoArgsConstructor
 @AllArgsConstructor
-public class AuthRequest {
-    private String usernameOrEmail;
+@NoArgsConstructor
+public class RegisterRequest {
+    private String name;
+    private String username;
+    private String email;
     private String password;
+    private String confirmPassword;
 }

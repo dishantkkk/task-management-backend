@@ -4,7 +4,6 @@ package com.dishant.tasks.management.service;
 import com.dishant.tasks.management.model.User;
 import com.dishant.tasks.management.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -16,17 +15,19 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {
 
-    private final UserRepository userRepo;
+    private final UserRepository userRepository;
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userRepo.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+    public UserDetails loadUserByUsername(String emailOrUsername) throws UsernameNotFoundException {
+        User user = userRepository.findByEmailOrUsername(emailOrUsername, emailOrUsername)
+                .map(CustomUserDetails::new)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found")).getUser();
 
-        return new org.springframework.security.core.userdetails.User(
-                user.getUsername(),
-                user.getPassword(),
-                List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()))
-        );
+        if (!user.isEnabled()) {
+            throw new UsernameNotFoundException("Email not verified. Please verify before login.");
+        }
+
+        return new CustomUserDetails(user);
     }
 }
+
