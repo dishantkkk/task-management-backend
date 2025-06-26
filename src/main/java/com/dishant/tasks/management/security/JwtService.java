@@ -1,5 +1,5 @@
 
-package com.dishant.tasks.management.service;
+package com.dishant.tasks.management.security;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;

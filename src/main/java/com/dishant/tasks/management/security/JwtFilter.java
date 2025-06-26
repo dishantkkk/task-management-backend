@@ -1,6 +1,5 @@
-package com.dishant.tasks.management.config.filter;
+package com.dishant.tasks.management.security;
 
-import com.dishant.tasks.management.service.JwtService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;

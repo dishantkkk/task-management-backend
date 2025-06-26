@@ -2,16 +2,53 @@ package com.dishant.tasks.management.service;
 
 import com.dishant.tasks.management.model.User;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
 @Service
 @Slf4j
 public class EmailService {
 
-    public void sendVerificationEmail(User user) {
+    @Autowired
+    private JavaMailSender javaMailSender;
+
+    public void sendVerificationEmail(User user, String resetLink) {
         String verificationLink = "http://localhost:8080/v1/api/auth/verify?token=" + user.getVerificationToken();
-        String subject = "Verify your email";
-        String body = "Hi " + user.getName() + ",\n\nPlease verify your email by clicking the link below:\n" + verificationLink;
+
+        log.info("Preparing to send verification email to: {} and link: {}", user.getEmail(), resetLink);
+        log.debug("Verification link generated for user {}: {} and reset link: {}", user.getUsername(), verificationLink, resetLink);
+
+        // You can uncomment and use actual email sending logic:
+        /*
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setTo(user.getEmail());
+            message.setSubject("Verify your email");
+            message.setText("Click the link below to verify your email:\n" + verificationLink);
+            javaMailSender.send(message);
+            log.info("Verification email sent successfully to: {}", user.getEmail());
+        } catch (Exception e) {
+            log.error("Failed to send verification email to {}: {}", user.getEmail(), e.getMessage());
+        }
+        */
+
+        // For now, just log the verification link
         log.info("📧 Send this verification link to user: {}", verificationLink);
+    }
+
+    public void sendEmail(String to, String subject, String body) {
+        log.info("Sending email to: {} | Subject: {}", to, subject);
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setTo(to);
+            message.setSubject(subject);
+            message.setText(body);
+            javaMailSender.send(message);
+            log.info("Email sent successfully to: {}", to);
+        } catch (Exception e) {
+            log.error("Failed to send email to {}: {}", to, e.getMessage());
+        }
     }
 }

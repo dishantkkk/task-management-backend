@@ -31,12 +31,17 @@ public class TaskService {
     private final UserRepository userRepository;
 
     public TaskResponse createTask(TaskRequest request) {
-        log.info("Creating task...");
+        log.info("Creating new task for user");
         User currentUser = taskHelper.getCurrentUser();
         User assignedToUser = currentUser;
+
         if (taskHelper.isAdmin(currentUser) && request.getAssignedToId() != null) {
+            log.debug("Admin user assigning task to user ID: {}", request.getAssignedToId());
             assignedToUser = userRepository.findById(request.getAssignedToId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Assigned user not found"));
+                    .orElseThrow(() -> {
+                        log.warn("Assigned user not found for ID: {}", request.getAssignedToId());
+                        return new ResourceNotFoundException("Assigned user not found");
+                    });
         }
 
         Task task = Task.builder()
@@ -51,12 +56,12 @@ public class TaskService {
                 .build();
 
         Task savedTask = taskRepository.save(task);
-        log.info("✅ Task created with ID: {}", savedTask.getId());
+        log.info("✅ Task created successfully with ID: {}", savedTask.getId());
         return taskHelper.mapToResponse(savedTask);
     }
 
     public List<TaskResponse> getAllTasks() {
-        log.info("Fetching all tasks...");
+        log.info("Fetching all tasks for current user");
         User user = taskHelper.getCurrentUser();
         boolean isAdmin = taskHelper.isAdmin(user);
 
@@ -64,7 +69,7 @@ public class TaskService {
                 ? taskRepository.findByStatusNot(TaskStatus.COMPLETED)
                 : taskRepository.findByUserAndStatusNot(user, TaskStatus.COMPLETED);
 
-        log.info("✅ Found {} tasks", tasks.size());
+        log.info("✅ Retrieved {} tasks for {}", tasks.size(), isAdmin ? "Admin" : "User");
         return tasks.stream().map(taskHelper::mapToResponse).toList();
     }
 
@@ -72,6 +77,7 @@ public class TaskService {
         log.info("Fetching task with ID: {}", id);
         Task task = taskHelper.getTaskOrThrow(id);
         taskHelper.checkAccess(task);
+        log.debug("Access check passed for task ID: {}", id);
         return taskHelper.mapToResponse(task);
     }
 
@@ -86,30 +92,40 @@ public class TaskService {
         Task task = taskHelper.getTaskOrThrow(id);
         User currentUser = taskHelper.getCurrentUser();
         taskHelper.checkAccess(task);
+        log.debug("User {} has access to update task {}", currentUser.getUsername(), id);
 
         switch (updateTaskRequest.getType()) {
             case ACTION -> {
+                log.debug("Updating task status to: {}", updateTaskRequest.getValue());
                 task.setStatus(TaskStatus.valueOf(updateTaskRequest.getValue()));
-                log.info("✅ Task status updated to {}", updateTaskRequest.getValue());
             }
             case FLAG -> {
+                log.debug("Updating task flag to: {}", updateTaskRequest.getValue());
                 task.setFlag(updateTaskRequest.getValue());
-                log.info("✅ Task flag updated to {}", updateTaskRequest.getValue());
+            }
+            default -> {
+                log.warn("Unknown update type: {}", updateTaskRequest.getType());
+                throw new BadRequestException("Unknown update type");
             }
         }
+
         task.setTitle(updateTaskRequest.getTitle());
         task.setDescription(updateTaskRequest.getDescription());
         task.setDueDate(updateTaskRequest.getDueDate());
         task.setPriority(updateTaskRequest.getPriority());
 
         if (taskHelper.isAdmin(currentUser) && updateTaskRequest.getAssignedToId() != null) {
+            log.debug("Admin reassigning task {} to user ID: {}", id, updateTaskRequest.getAssignedToId());
             User assignedUser = userRepository.findById(updateTaskRequest.getAssignedToId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Assigned user not found"));
+                    .orElseThrow(() -> {
+                        log.warn("Assigned user not found for update: {}", updateTaskRequest.getAssignedToId());
+                        return new ResourceNotFoundException("Assigned user not found");
+                    });
             task.setAssignedTo(assignedUser);
-            log.info("✅ Task reassigned to user ID {}", assignedUser.getId());
         }
 
         Task updatedTask = taskRepository.save(task);
+        log.info("✅ Task with ID: {} updated successfully", updatedTask.getId());
         return taskHelper.mapToResponse(updatedTask);
     }
 
@@ -118,16 +134,16 @@ public class TaskService {
         Task task = taskHelper.getTaskOrThrow(id);
         taskHelper.checkAccess(task);
         taskRepository.delete(task);
-        log.info("✅ Task deleted");
+        log.info("✅ Task with ID: {} deleted successfully", id);
     }
 
     public void closeTask(Long id) {
-        log.info("Closing Task with ID: {}", id);
+        log.info("Closing task with ID: {}", id);
         Task task = taskHelper.getTaskOrThrow(id);
-        task.setStatus(TaskStatus.valueOf(COMPLETED));
+        task.setStatus(TaskStatus.COMPLETED);
         task.setUpdatedAt(LocalDateTime.now());
 
         taskRepository.save(task);
-        log.info("Task with ID: {} marked as COMPLETED.", id);
+        log.info("✅ Task with ID: {} marked as COMPLETED", id);
     }
 }

@@ -6,17 +6,18 @@ import com.dishant.tasks.management.dto.RegisterRequest;
 import com.dishant.tasks.management.model.Role;
 import com.dishant.tasks.management.model.User;
 import com.dishant.tasks.management.repository.UserRepository;
-import com.dishant.tasks.management.service.CustomUserDetails;
-import com.dishant.tasks.management.service.JwtService;
+import com.dishant.tasks.management.security.CustomUserDetails;
+import com.dishant.tasks.management.security.JwtService;
+import com.dishant.tasks.management.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -31,23 +32,22 @@ class AuthControllerTest {
     private JwtService jwtService;
 
     @Mock
-    private UserRepository userRepo;
+    private UserService userService;
 
     @Mock
-    private PasswordEncoder passwordEncoder;
+    private UserRepository userRepository;
 
     @InjectMocks
     private AuthController authController;
 
-    private AuthRequest request;
-
+    private AuthRequest authRequest;
     private RegisterRequest registerRequest;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
 
-        request = AuthRequest.builder()
+        authRequest = AuthRequest.builder()
                 .usernameOrEmail("testuser")
                 .password("testpass")
                 .build();
@@ -63,59 +63,164 @@ class AuthControllerTest {
 
     @Test
     void register_Success() {
-        when(userRepo.findByUsername("testuser")).thenReturn(Optional.empty());
-        when(passwordEncoder.encode("testpass")).thenReturn("encodedpass");
+        User user = User.builder()
+                .username("abc")
+                .email("abc@mail.com")
+                .role(Role.USER)
+                .build();
 
-        ResponseEntity<?> response = authController.register(registerRequest);
+        Map<String, String> requestMap = new HashMap<>();
+        requestMap.put("email", "abc@mail.com");
+        requestMap.put("name", "abc");
+        requestMap.put("username", "abc");
+        requestMap.put("password", "testpass");
+        requestMap.put("confirmPassword", "testpass");
 
-        assertEquals(200, response.getStatusCode().value());
-        assertEquals("User registered", response.getBody());
-        verify(userRepo, times(1)).save(any(User.class));
+        when(userService.registerUser(requestMap)).thenReturn(Optional.of(user));
+        when(jwtService.generateToken(any(CustomUserDetails.class))).thenReturn("jwt-token");
+
+        ResponseEntity<?> response = authController.register(requestMap);
+
+        assertEquals(200, response.getStatusCodeValue());
+        AuthResponse body = (AuthResponse) response.getBody();
+        assertNotNull(body);
+        assertEquals("abc", body.getUsername());
+        assertEquals("abc@mail.com", body.getEmail());
+        assertEquals("USER", body.getRole());
     }
 
     @Test
-    void register_UsernameAlreadyExists() {
-        when(userRepo.findByUsername("testuser")).thenReturn(Optional.of(User.builder().build()));
+    void register_Failure() {
+        Map<String, String> requestMap = new HashMap<>();
+        requestMap.put("username", "abc");
+        requestMap.put("email", "abc@mail.com");
+        requestMap.put("name", "abc");
+        requestMap.put("password", "testpass");
+        requestMap.put("confirmPassword", "testpass");
 
-        ResponseEntity<?> response = authController.register(registerRequest);
+        when(userService.registerUser(anyMap())).thenThrow(new IllegalArgumentException("Username already exists"));
 
-        assertEquals(400, response.getStatusCode().value());
+        ResponseEntity<?> response = authController.register(requestMap);
+        assertEquals(400, response.getStatusCodeValue());
         assertEquals("Username already exists", response.getBody());
-        verify(userRepo, never()).save(any());
     }
 
     @Test
     void login_Success() {
-        AuthRequest request = new AuthRequest();
-        request.setUsernameOrEmail("test@example.com");
-        request.setPassword("password");
-
         User user = new User();
         user.setUsername("testuser");
         user.setEmail("test@example.com");
         user.setRole(Role.USER);
+        user.setEnabled(true);
 
-        CustomUserDetails customUserDetails = new CustomUserDetails(user);
+        CustomUserDetails userDetails = new CustomUserDetails(user);
+        Authentication auth = mock(Authentication.class);
 
-        Authentication mockAuth = mock(Authentication.class);
-        when(authManager.authenticate(any(UsernamePasswordAuthenticationToken.class))).thenReturn(mockAuth);
-        when(mockAuth.getPrincipal()).thenReturn(customUserDetails);
+        when(userRepository.findByEmail("testuser")).thenReturn(Optional.of(user));
+        when(authManager.authenticate(any())).thenReturn(auth);
+        when(auth.getPrincipal()).thenReturn(userDetails);
+        when(jwtService.generateToken(userDetails)).thenReturn("jwt-token");
 
-        when(jwtService.generateToken(customUserDetails)).thenReturn("jwt-token");
+        ResponseEntity<?> response = authController.login(authRequest);
 
-        ResponseEntity<?> response = authController.login(request);
-
-        assertEquals(200, response.getStatusCode().value());
-
+        assertEquals(200, response.getStatusCodeValue());
         AuthResponse authResponse = (AuthResponse) response.getBody();
-        assertNotNull(authResponse);
-        assertEquals("jwt-token", authResponse.getToken());
         assertEquals("testuser", authResponse.getUsername());
-        assertEquals("test@example.com", authResponse.getEmail());
-        assertEquals("USER", authResponse.getRole());
-
-        verify(authManager, times(1)).authenticate(any());
-        verify(jwtService, times(1)).generateToken(customUserDetails);
+        assertEquals("jwt-token", authResponse.getToken());
     }
 
+    @Test
+    void login_UnverifiedUser() {
+        User user = new User();
+        user.setUsername("testuser");
+        user.setEnabled(false);
+
+        when(userRepository.findByEmail("testuser")).thenReturn(Optional.of(user));
+
+        ResponseEntity<?> response = authController.login(authRequest);
+
+        assertEquals(401, response.getStatusCodeValue());
+        assertEquals("Email not verified", response.getBody());
+    }
+
+    @Test
+    void verifyEmail_Success() {
+        when(userService.verifyEmail("valid-token")).thenReturn(true);
+
+        ResponseEntity<?> response = authController.verifyEmail("valid-token");
+        assertEquals(200, response.getStatusCodeValue());
+        assertEquals("Email verified successfully. You can now log in.", response.getBody());
+    }
+
+    @Test
+    void verifyEmail_InvalidToken() {
+        when(userService.verifyEmail("invalid")).thenReturn(false);
+
+        ResponseEntity<?> response = authController.verifyEmail("invalid");
+        assertEquals(400, response.getStatusCodeValue());
+        assertEquals("Invalid or expired verification token", response.getBody());
+    }
+
+    @Test
+    void resendVerification_Success() {
+        Map<String, String> map = Map.of("email", "test@mail.com");
+        doNothing().when(userService).resendVerification("test@mail.com");
+
+        ResponseEntity<?> response = authController.resendVerification(map);
+        assertEquals(200, response.getStatusCodeValue());
+        assertEquals("Verification email resent", response.getBody());
+    }
+
+    @Test
+    void resendVerification_Failure() {
+        Map<String, String> map = Map.of("email", "test@mail.com");
+        doThrow(new IllegalArgumentException("Email already verified"))
+                .when(userService).resendVerification("test@mail.com");
+
+        ResponseEntity<?> response = authController.resendVerification(map);
+        assertEquals(400, response.getStatusCodeValue());
+        assertEquals("Email already verified", response.getBody());
+    }
+
+    @Test
+    void forgotPassword_Success() {
+        Map<String, String> map = Map.of("email", "abc@mail.com");
+        doNothing().when(userService).initiatePasswordReset("abc@mail.com");
+
+        ResponseEntity<?> response = authController.forgotPassword(map);
+        assertEquals(200, response.getStatusCodeValue());
+        assertEquals("Reset link sent to your email.", response.getBody());
+    }
+
+    @Test
+    void forgotPassword_UserNotFound() {
+        Map<String, String> map = Map.of("email", "abc@mail.com");
+        doThrow(new IllegalArgumentException("User not found"))
+                .when(userService).initiatePasswordReset("abc@mail.com");
+
+        ResponseEntity<?> response = authController.forgotPassword(map);
+        assertEquals(404, response.getStatusCodeValue());
+        assertEquals("User not found", response.getBody());
+    }
+
+    @Test
+    void resetPassword_Success() {
+        Map<String, String> map = Map.of("token", "abc123", "password", "newpass");
+        doNothing().when(userService).resetPassword("abc123", "newpass");
+
+        ResponseEntity<?> response = authController.resetPassword(map);
+        assertEquals(200, response.getStatusCodeValue());
+        assertEquals("Password reset successful.", response.getBody());
+    }
+
+    @Test
+    void resetPassword_InvalidToken() {
+        Map<String, String> map = Map.of("token", "abc123", "password", "newpass");
+        doThrow(new IllegalArgumentException("Token expired"))
+                .when(userService).resetPassword("abc123", "newpass");
+
+        ResponseEntity<?> response = authController.resetPassword(map);
+        assertEquals(400, response.getStatusCodeValue());
+        assertEquals("Token expired", response.getBody());
+    }
 }

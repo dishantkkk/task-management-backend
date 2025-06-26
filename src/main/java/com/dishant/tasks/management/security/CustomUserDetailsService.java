@@ -1,5 +1,5 @@
 
-package com.dishant.tasks.management.service;
+package com.dishant.tasks.management.security;
 
 import com.dishant.tasks.management.model.User;
 import com.dishant.tasks.management.repository.UserRepository;
@@ -8,8 +8,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor

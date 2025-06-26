@@ -1,4 +1,4 @@
-package com.dishant.tasks.management.service;
+package com.dishant.tasks.management.security;
 
 import com.dishant.tasks.management.model.User;
 import org.springframework.security.core.GrantedAuthority;

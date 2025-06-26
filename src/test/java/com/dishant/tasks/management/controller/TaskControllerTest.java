@@ -12,7 +12,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.ResponseEntity;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 
@@ -38,7 +38,7 @@ class TaskControllerTest {
                 .title("Test Task")
                 .description("Test Description")
                 .status(TaskStatus.PENDING)
-                .dueDate(LocalDate.now().plusDays(2))
+                .dueDate(LocalDateTime.now().plusDays(2))
                 .build();
 
         response = TaskResponse.builder()
@@ -77,6 +77,18 @@ class TaskControllerTest {
     }
 
     @Test
+    void testGetAllTasks_EmptyList() {
+        when(taskService.getAllTasks()).thenReturn(Collections.emptyList());
+
+        ResponseEntity<List<TaskResponse>> result = taskController.getAllTasks();
+
+        assertEquals(200, result.getStatusCode().value());
+        assertTrue(result.getBody().isEmpty());
+        verify(taskService).getAllTasks();
+    }
+
+
+    @Test
     void testGetTaskById() {
         when(taskService.getTaskById(1L)).thenReturn(response);
 
@@ -89,11 +101,24 @@ class TaskControllerTest {
     }
 
     @Test
+    void testGetTaskById_NotFound() {
+        when(taskService.getTaskById(99L)).thenThrow(new RuntimeException("Task not found"));
+
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            taskController.getTaskById(99L);
+        });
+
+        assertEquals("Task not found", exception.getMessage());
+        verify(taskService).getTaskById(99L);
+    }
+
+
+    @Test
     void testUpdateTask() {
         UpdateTaskRequest updatedRequest = UpdateTaskRequest.builder()
                 .title("Updated Task")
                 .description("Updated Description")
-                .dueDate(LocalDate.now().plusDays(1))
+                .dueDate(LocalDateTime.now().plusDays(1))
                 .build();
 
         TaskResponse updatedResponse = TaskResponse.builder()
