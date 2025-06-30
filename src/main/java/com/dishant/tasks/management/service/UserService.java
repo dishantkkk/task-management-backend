@@ -13,6 +13,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+import static com.dishant.tasks.management.constants.Constants.EMAIL;
+import static com.dishant.tasks.management.constants.Constants.USER_NOT_FOUND_ERROR_MESSAGE;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -25,7 +28,7 @@ public class UserService {
     public Optional<User> registerUser(Map<String, String> requestData) {
         String name = requestData.get("name");
         String username = requestData.get("username");
-        String email = requestData.get("email");
+        String email = requestData.get(EMAIL);
         String password = requestData.get("password");
         String confirmPassword = requestData.get("confirmPassword");
 
@@ -113,7 +116,7 @@ public class UserService {
 
         if (userOpt.isEmpty()) {
             log.warn("User not found for password reset: {}", email);
-            throw new IllegalArgumentException("User not found");
+            throw new IllegalArgumentException(USER_NOT_FOUND_ERROR_MESSAGE);
         }
 
         User user = userOpt.get();

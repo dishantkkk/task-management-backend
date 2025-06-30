@@ -1,6 +1,7 @@
 package com.dishant.tasks.management.service;
 
 import com.dishant.tasks.management.model.User;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
@@ -9,9 +10,9 @@ import org.springframework.stereotype.Service;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class EmailService {
 
-    @Autowired
     private JavaMailSender javaMailSender;
 
     public void sendVerificationEmail(User user, String resetLink) {
@@ -19,22 +20,6 @@ public class EmailService {
 
         log.info("Preparing to send verification email to: {} and link: {}", user.getEmail(), resetLink);
         log.debug("Verification link generated for user {}: {} and reset link: {}", user.getUsername(), verificationLink, resetLink);
-
-        // You can uncomment and use actual email sending logic:
-        /*
-        try {
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setTo(user.getEmail());
-            message.setSubject("Verify your email");
-            message.setText("Click the link below to verify your email:\n" + verificationLink);
-            javaMailSender.send(message);
-            log.info("Verification email sent successfully to: {}", user.getEmail());
-        } catch (Exception e) {
-            log.error("Failed to send verification email to {}: {}", user.getEmail(), e.getMessage());
-        }
-        */
-
-        // For now, just log the verification link
         log.info("📧 Send this verification link to user: {}", verificationLink);
     }
 

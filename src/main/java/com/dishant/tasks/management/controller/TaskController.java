@@ -22,14 +22,14 @@ public class TaskController {
 
     @PostMapping
     public ResponseEntity<TaskResponse> createTask(@RequestBody TaskRequest request) {
-        log.info("Creating task: {}", request);
+        log.info("Received request to create task: {}", request);
         TaskResponse response = taskService.createTask(request);
         return ResponseEntity.ok(response);
     }
 
     @GetMapping
     public ResponseEntity<List<TaskResponse>> getAllTasks() {
-        log.info("Fetching all tasks");
+        log.info("Received request to get all tasks");
         List<TaskResponse> tasks = taskService.getAllTasks();
         log.debug("Total tasks: {}", tasks.size());
         return ResponseEntity.ok(tasks);
@@ -37,21 +37,21 @@ public class TaskController {
 
     @GetMapping("/{id}")
     public ResponseEntity<TaskResponse> getTaskById(@PathVariable Long id) {
-        log.info("Fetching task by ID: {}", id);
+        log.info("Request request to get task for ID: {}", id);
         TaskResponse task = taskService.getTaskById(id);
         return ResponseEntity.ok(task);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<TaskResponse> updateTask(@PathVariable Long id, @RequestBody UpdateTaskRequest updateTaskRequest) {
-        log.info("Updating task ID: {}", id);
+        log.info("Received request to update task with ID: {}", id);
         TaskResponse updated = taskService.updateTask(id, updateTaskRequest);
         return ResponseEntity.ok(updated);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteTask(@PathVariable Long id) {
-        log.info("Deleting task ID: {}", id);
+        log.info("Received request to delete task with ID: {}", id);
         taskService.deleteTask(id);
         return ResponseEntity.noContent().build();
     }

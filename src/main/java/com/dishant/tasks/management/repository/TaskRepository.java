@@ -16,4 +16,5 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     List<Task> findByDueDateLessThanEqual(LocalDateTime dateTime);
     List<Task> findByUserAndStatusNot(User user, TaskStatus status);
     List<Task> findByStatusNot(TaskStatus status);
+    long countByStatus(TaskStatus status);
 }

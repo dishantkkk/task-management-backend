@@ -17,7 +17,7 @@ import java.util.List;
 
 @Slf4j
 @RestController
-@RequestMapping("/v1/api/user")
+@RequestMapping("/v1/api/users")
 @RequiredArgsConstructor
 public class UserController {
 
@@ -28,7 +28,7 @@ public class UserController {
     /**
      * 🔐 Admin-only: List all users
      */
-    @GetMapping("/all")
+    @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     public List<UserResponse> getAllUsers() {
         log.info("Received request to get all users!");

@@ -17,7 +17,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
-@EnableMethodSecurity
+@EnableMethodSecurity(prePostEnabled = true)
 @Slf4j
 public class SecurityConfig {
 
@@ -40,6 +40,7 @@ public class SecurityConfig {
                     auth.requestMatchers(
                             "/actuator/**", "/v1/api/auth/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html"
                     ).permitAll();
+                    auth.requestMatchers("/v1/api/admin/**").hasRole("ADMIN");
                     auth.anyRequest().authenticated();
                     log.debug("Authorization rules applied: Auth endpoints are publicly accessible");
                 })

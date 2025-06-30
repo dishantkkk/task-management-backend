@@ -19,6 +19,9 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 import java.util.Optional;
 
+import static com.dishant.tasks.management.constants.Constants.EMAIL;
+import static com.dishant.tasks.management.constants.Constants.USER_NOT_FOUND_ERROR_MESSAGE;
+
 @RestController
 @RequestMapping("/v1/api/auth")
 @Slf4j
@@ -31,7 +34,7 @@ public class AuthController {
     private final UserService userService;
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody Map<String, String> request) {
+    public ResponseEntity<Object> register(@RequestBody Map<String, String> request) {
         log.info("Received request to register user with username: {}", request.get("username"));
         try {
             Optional<User> user = userService.registerUser(request);
@@ -49,7 +52,7 @@ public class AuthController {
     }
 
     @GetMapping("/verify")
-    public ResponseEntity<?> verifyEmail(@RequestParam("token") String token) {
+    public ResponseEntity<Object> verifyEmail(@RequestParam("token") String token) {
         log.info("Received request to verify email with token");
         if (userService.verifyEmail(token)) {
             log.debug("Email verified successfully for token: {}", token);
@@ -60,11 +63,11 @@ public class AuthController {
     }
 
     @PostMapping("/resend-verification")
-    public ResponseEntity<?> resendVerification(@RequestBody Map<String, String> payload) {
-        log.info("Received request to resend verification email for: {}", payload.get("email"));
+    public ResponseEntity<Object> resendVerification(@RequestBody Map<String, String> payload) {
+        log.info("Received request to resend verification email for: {}", payload.get(EMAIL));
         try {
-            userService.resendVerification(payload.get("email"));
-            log.debug("Verification email resent to: {}", payload.get("email"));
+            userService.resendVerification(payload.get(EMAIL));
+            log.debug("Verification email resent to: {}", payload.get(EMAIL));
             return ResponseEntity.ok("Verification email resent");
         } catch (IllegalArgumentException ex) {
             log.error("Resend verification failed: {}", ex.getMessage());
@@ -73,7 +76,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody AuthRequest request) {
+    public ResponseEntity<Object> login(@RequestBody AuthRequest request) {
         String identifier = request.getUsernameOrEmail();
         log.info("Received login request for: {}", identifier);
 
@@ -111,11 +114,11 @@ public class AuthController {
     }
 
     @PostMapping("/forgot-password")
-    public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> request) {
-        log.info("Received request to reset password for: {}", request.get("email"));
+    public ResponseEntity<Object> forgotPassword(@RequestBody Map<String, String> request) {
+        log.info("Received request to reset password for: {}", request.get(EMAIL));
         try {
-            userService.initiatePasswordReset(request.get("email"));
-            log.debug("Password reset link sent to email: {}", request.get("email"));
+            userService.initiatePasswordReset(request.get(EMAIL));
+            log.debug("Password reset link sent to email: {}", request.get(EMAIL));
             return ResponseEntity.ok("Reset link sent to your email.");
         } catch (IllegalArgumentException ex) {
             log.error("Password reset failed: {}", ex.getMessage());
@@ -124,7 +127,7 @@ public class AuthController {
     }
 
     @PostMapping("/reset-password")
-    public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> request) {
+    public ResponseEntity<Object> resetPassword(@RequestBody Map<String, String> request) {
         log.info("Received request to reset password using token");
         try {
             userService.resetPassword(request.get("token"), request.get("password"));
@@ -137,12 +140,12 @@ public class AuthController {
     }
 
     @GetMapping("/email-by-username")
-    public ResponseEntity<?> getEmailByUsername(@RequestParam("username") String username) {
+    public ResponseEntity<Object> getEmailByUsername(@RequestParam("username") String username) {
         log.info("Received request to fetch email for username: {}", username);
         Optional<User> userOpt = userRepository.findByUsername(username);
         if (userOpt.isEmpty()) {
             log.warn("User not found for username: {}", username);
-            return ResponseEntity.badRequest().body("User not found");
+            return ResponseEntity.badRequest().body(USER_NOT_FOUND_ERROR_MESSAGE);
         }
         User user = userOpt.get();
         if (user.isEnabled()) {
@@ -150,6 +153,6 @@ public class AuthController {
             return ResponseEntity.badRequest().body("Email already verified");
         }
         log.debug("Email retrieved for username {}: {}", username, user.getEmail());
-        return ResponseEntity.ok(Map.of("email", user.getEmail()));
+        return ResponseEntity.ok(Map.of(EMAIL, user.getEmail()));
     }
 }
