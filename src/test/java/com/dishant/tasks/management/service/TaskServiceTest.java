@@ -3,6 +3,7 @@ package com.dishant.tasks.management.service;
 import com.dishant.tasks.management.dto.TaskRequest;
 import com.dishant.tasks.management.dto.TaskResponse;
 import com.dishant.tasks.management.dto.UpdateTaskRequest;
+import com.dishant.tasks.management.exception.BadRequestException;
 import com.dishant.tasks.management.exception.ResourceNotFoundException;
 import com.dishant.tasks.management.model.*;
 import com.dishant.tasks.management.repository.TaskRepository;
@@ -99,6 +100,27 @@ class TaskServiceTest {
     }
 
     @Test
+    void testCreateTask_AdminAssignsToAnotherUser() {
+        user.setRole(Role.ADMIN);
+        User assignee = User.builder().id(2L).username("assignedUser").build();
+
+        taskRequest.setAssignedToId(2L); // triggering the if block
+
+        when(taskHelper.getCurrentUser()).thenReturn(user);
+        when(taskHelper.isAdmin(user)).thenReturn(true);
+        when(userRepository.findById(2L)).thenReturn(Optional.of(assignee));
+        when(taskRepository.save(any(Task.class))).thenReturn(task);
+        when(taskHelper.mapToResponse(any(Task.class))).thenReturn(taskResponse);
+
+        TaskResponse response = taskService.createTask(taskRequest);
+
+        assertNotNull(response);
+        verify(userRepository).findById(2L); // ensure admin assignment happened
+        verify(taskRepository).save(any(Task.class));
+    }
+
+
+    @Test
     void testGetAllTasks_User() {
         when(taskHelper.getCurrentUser()).thenReturn(user);
         when(taskHelper.isAdmin(user)).thenReturn(false);
@@ -108,7 +130,7 @@ class TaskServiceTest {
         List<TaskResponse> result = taskService.getAllTasks();
 
         assertEquals(1, result.size());
-        assertEquals("Mapped Task", result.get(0).getTitle());
+        assertEquals("Mapped Task", result.getFirst().getTitle());
     }
 
     @Test
@@ -122,7 +144,7 @@ class TaskServiceTest {
         List<TaskResponse> result = taskService.getAllTasks();
 
         assertEquals(1, result.size());
-        assertEquals("Mapped Task", result.get(0).getTitle());
+        assertEquals("Mapped Task", result.getFirst().getTitle());
     }
 
     @Test
@@ -189,6 +211,24 @@ class TaskServiceTest {
         when(userRepository.findById(999L)).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class, () -> taskService.updateTask(1L, updateTaskRequest));
+    }
+
+    @Test
+    void testUpdateTask_MissingType_ThrowsBadRequest() {
+        updateTaskRequest.setType(null); // or set to ""
+
+        assertThrows(BadRequestException.class, () -> taskService.updateTask(1L, updateTaskRequest));
+    }
+
+    @Test
+    void testUpdateTask_InvalidType_ThrowsBadRequest() {
+        updateTaskRequest.setType("invalidType");
+
+        when(taskHelper.getTaskOrThrow(1L)).thenReturn(task);
+        when(taskHelper.getCurrentUser()).thenReturn(user);
+        doNothing().when(taskHelper).checkAccess(task);
+
+        assertThrows(BadRequestException.class, () -> taskService.updateTask(1L, updateTaskRequest));
     }
 
     @Test

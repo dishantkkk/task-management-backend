@@ -7,6 +7,7 @@ import org.mockito.*;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.*;
 
 class EmailServiceTest {
@@ -36,7 +37,9 @@ class EmailServiceTest {
         SimpleMailMessage sentMessage = messageCaptor.getValue();
         assert sentMessage.getTo() != null;
         assert sentMessage.getTo()[0].equals(to);
+        assertNotNull(sentMessage.getSubject());
         assert sentMessage.getSubject().equals(subject);
+        assertNotNull(sentMessage.getText());
         assert sentMessage.getText().equals(body);
     }
 
@@ -47,7 +50,7 @@ class EmailServiceTest {
         user.setEmail("john@example.com");
         user.setVerificationToken("abc123");
 
-        emailService.sendVerificationEmail(user);
+        emailService.sendVerificationEmail(user, "/link");
 
         verify(javaMailSender, never()).send(any(SimpleMailMessage.class));
     }

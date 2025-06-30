@@ -11,6 +11,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import java.time.LocalDateTime;
 import java.util.*;
 
+import static com.dishant.tasks.management.constants.Constants.EMAIL;
+import static com.dishant.tasks.management.constants.Constants.USER_NOT_FOUND_ERROR_MESSAGE;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -47,7 +49,7 @@ class UserServiceTest {
         Map<String, String> request = new HashMap<>();
         request.put("name", "Test");
         request.put("username", "testuser");
-        request.put("email", "test@example.com");
+        request.put(EMAIL, "test@example.com");
         request.put("password", "pass123");
         request.put("confirmPassword", "pass123");
 
@@ -59,14 +61,14 @@ class UserServiceTest {
 
         assertTrue(result.isPresent());
         verify(userRepository).save(any(User.class));
-        verify(emailService).sendVerificationEmail(any(User.class));
+        verify(emailService).sendVerificationEmail(any(User.class), any());
     }
 
     @Test
     void registerUser_PasswordMismatch() {
         Map<String, String> request = new HashMap<>();
         request.put("username", "testuser");
-        request.put("email", "test@example.com");
+        request.put(EMAIL, "test@example.com");
         request.put("password", "pass123");
         request.put("confirmPassword", "pass456");
 
@@ -79,7 +81,7 @@ class UserServiceTest {
     void registerUser_UsernameExists() {
         Map<String, String> request = new HashMap<>();
         request.put("username", "testuser");
-        request.put("email", "test@example.com");
+        request.put(EMAIL, "test@example.com");
         request.put("password", "pass123");
         request.put("confirmPassword", "pass123");
 
@@ -94,7 +96,7 @@ class UserServiceTest {
     void registerUser_EmailExists() {
         Map<String, String> request = new HashMap<>();
         request.put("username", "testuser");
-        request.put("email", "test@example.com");
+        request.put(EMAIL, "test@example.com");
         request.put("password", "pass123");
         request.put("confirmPassword", "pass123");
 
@@ -137,7 +139,7 @@ class UserServiceTest {
 
         assertNotNull(user.getVerificationToken());
         verify(userRepository).save(user);
-        verify(emailService).sendVerificationEmail(user);
+        verify(emailService).sendVerificationEmail(user, "abc");
     }
 
     @Test
@@ -170,7 +172,7 @@ class UserServiceTest {
         assertNotNull(user.getResetToken());
         assertNotNull(user.getResetTokenExpiry());
         verify(userRepository).save(user);
-        verify(emailService).sendEmail(eq(user.getEmail()), anyString(), contains("reset-password"));
+        verify(emailService).sendVerificationEmail(eq(user), contains("reset-password"));
     }
 
     @Test
@@ -180,7 +182,7 @@ class UserServiceTest {
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
                 () -> userService.initiatePasswordReset("notfound@example.com"));
 
-        assertEquals("User not found", ex.getMessage());
+        assertEquals(USER_NOT_FOUND_ERROR_MESSAGE, ex.getMessage());
     }
 
     @Test
@@ -221,4 +223,19 @@ class UserServiceTest {
 
         assertEquals("Token expired", ex.getMessage());
     }
+
+    @Test
+    void testResetPassword_NullExpiry() {
+        User resetUser = new User();
+        resetUser.setUsername("testuser");
+        resetUser.setResetTokenExpiry(null); // Null expiry
+
+        when(userRepository.findByResetToken("nullExpiryToken")).thenReturn(Optional.of(resetUser));
+
+        Exception exception = assertThrows(IllegalArgumentException.class, () ->
+                userService.resetPassword("nullExpiryToken", "newPassword"));
+
+        assertEquals("Token expired", exception.getMessage());
+    }
+
 }
