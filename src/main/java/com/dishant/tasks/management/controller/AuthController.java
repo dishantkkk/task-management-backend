@@ -37,14 +37,18 @@ public class AuthController {
     public ResponseEntity<Object> register(@RequestBody Map<String, String> request) {
         log.info("Received request to register user with username: {}", request.get("username"));
         try {
-            Optional<User> user = userService.registerUser(request);
-            String jwt = jwtService.generateToken(new CustomUserDetails(user.get()));
-            log.debug("JWT token generated for user: {}", user.get().getUsername());
+            Optional<User> userOptional = userService.registerUser(request);
+            User user = userOptional.orElseThrow(() -> new IllegalArgumentException("User registration failed"));
 
-            return ResponseEntity.ok(new AuthResponse(jwt,
-                    user.get().getUsername(),
-                    user.get().getEmail(),
-                    user.get().getRole().name()));
+            String jwt = jwtService.generateToken(new CustomUserDetails(user));
+            log.debug("JWT token generated for user: {}", user.getUsername());
+
+            return ResponseEntity.ok(new AuthResponse(
+                    jwt,
+                    user.getUsername(),
+                    user.getEmail(),
+                    user.getRole().name()
+            ));
         } catch (IllegalArgumentException ex) {
             log.error("Registration failed: {}", ex.getMessage());
             return ResponseEntity.badRequest().body(ex.getMessage());
