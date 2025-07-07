@@ -56,7 +56,7 @@ public class TaskService {
                 .build();
 
         Task savedTask = taskRepository.save(task);
-        log.info("✅ Task created successfully with ID: {}", savedTask.getId());
+        log.info("Task created successfully with ID: {}", savedTask.getId());
         return taskHelper.mapToResponse(savedTask);
     }
 
@@ -69,7 +69,7 @@ public class TaskService {
                 ? taskRepository.findByStatusNot(TaskStatus.COMPLETED)
                 : taskRepository.findByUserAndStatusNot(user, TaskStatus.COMPLETED);
 
-        log.info("✅ Retrieved {} tasks for {}", tasks.size(), isAdmin ? "Admin" : "User");
+        log.info("Retrieved {} tasks for {}", tasks.size(), isAdmin ? "Admin" : "User");
         return tasks.stream().map(taskHelper::mapToResponse).toList();
     }
 
@@ -85,7 +85,7 @@ public class TaskService {
         log.info("Updating task with ID: {}", id);
 
         if (updateTaskRequest.getType() == null || updateTaskRequest.getType().isEmpty()) {
-            log.warn("❌ Update type is missing for task ID: {}", id);
+            log.warn("Update type is missing for task ID: {}", id);
             throw new BadRequestException("Invalid Request!");
         }
 
@@ -125,7 +125,7 @@ public class TaskService {
         }
 
         Task updatedTask = taskRepository.save(task);
-        log.info("✅ Task with ID: {} updated successfully", updatedTask.getId());
+        log.info("Task with ID: {} updated successfully", updatedTask.getId());
         return taskHelper.mapToResponse(updatedTask);
     }
 
@@ -134,7 +134,7 @@ public class TaskService {
         Task task = taskHelper.getTaskOrThrow(id);
         taskHelper.checkAccess(task);
         taskRepository.delete(task);
-        log.info("✅ Task with ID: {} deleted successfully", id);
+        log.info("Task with ID: {} deleted successfully", id);
     }
 
     public void closeTask(Long id) {
@@ -144,6 +144,6 @@ public class TaskService {
         task.setUpdatedAt(LocalDateTime.now());
 
         taskRepository.save(task);
-        log.info("✅ Task with ID: {} marked as COMPLETED", id);
+        log.info("Task with ID: {} marked as COMPLETED", id);
     }
 }

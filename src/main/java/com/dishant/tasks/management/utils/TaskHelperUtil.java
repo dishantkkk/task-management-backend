@@ -26,7 +26,7 @@ public class TaskHelperUtil {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication == null || !authentication.isAuthenticated()) {
-            log.error("❌ No authenticated user found");
+            log.error("No authenticated user found");
             throw new RuntimeException("Unauthorized");
         }
 
@@ -36,7 +36,7 @@ public class TaskHelperUtil {
         return userRepository.findByUsername(identifier)
                 .or(() -> userRepository.findByEmail(identifier))
                 .orElseThrow(() -> {
-                    log.error("❌ Authenticated user not found: {}", identifier);
+                    log.error("Authenticated user not found: {}", identifier);
                     return new UsernameNotFoundException("User not found: " + identifier);
                 });
     }
@@ -48,7 +48,7 @@ public class TaskHelperUtil {
     public Task getTaskOrThrow(Long id) {
         return taskRepository.findById(id)
                 .orElseThrow(() -> {
-                    log.warn("❌ Task not found with ID: {}", id);
+                    log.warn("Task not found with ID: {}", id);
                     return new TaskNotFoundException("Task not found with id: " + id);
                 });
     }
@@ -56,7 +56,7 @@ public class TaskHelperUtil {
     public void checkAccess(Task task) {
         User user = getCurrentUser();
         if (!isAdmin(user) && !task.getUser().getId().equals(user.getId())) {
-            log.error("❌ Unauthorized access attempt by user: {}", user.getUsername());
+            log.error("Unauthorized access attempt by user: {}", user.getUsername());
             throw new UnAuthorizedException("Unauthorized access to task");
         }
     }

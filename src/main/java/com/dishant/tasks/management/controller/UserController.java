@@ -25,9 +25,6 @@ public class UserController {
     private final TaskHelperUtil taskHelper;
     private final PasswordEncoder passwordEncoder;
 
-    /**
-     * 🔐 Admin-only: List all users
-     */
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     public List<UserResponse> getAllUsers() {
@@ -43,9 +40,6 @@ public class UserController {
                 .toList();
     }
 
-    /**
-     * 👤 Authenticated user: Get own profile
-     */
     @GetMapping("/me")
     public ResponseEntity<UserResponse> getProfile() {
         log.info("Received request to get current profile");
@@ -54,9 +48,6 @@ public class UserController {
         return ResponseEntity.ok(new UserResponse(user));
     }
 
-    /**
-     * 📝 Update name & email
-     */
     @PutMapping("/update")
     public ResponseEntity<String> updateProfile(@RequestBody UpdateProfileRequest request) {
         User user = taskHelper.getCurrentUser();
@@ -67,9 +58,6 @@ public class UserController {
         return ResponseEntity.ok("Profile updated successfully");
     }
 
-    /**
-     * 🔐 Update password with current password check
-     */
     @PutMapping("/update-password")
     public ResponseEntity<String> updatePassword(@RequestBody PasswordUpdateRequest request) {
         User user = taskHelper.getCurrentUser();
