@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.36.0 (HEAD)
+  labels:
+    io.kompose.service: service-registry
+  name: service-registry
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: service-registry
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert
+        kompose.version: 1.36.0 (HEAD)
+      labels:
+        io.kompose.service: service-registry
+    spec:
+      containers:
+        - env:
+            - name: SCHEMA_REGISTRY_HOST_NAME
+              value: schema-registry
+            - name: SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS
+              value: PLAINTEXT://kafka:9092
+            - name: SCHEMA_REGISTRY_LISTENERS
+              value: http://0.0.0.0:8081
+          image: confluentinc/cp-schema-registry:7.5.0
+          name: schema-registry
+          ports:
+            - containerPort: 8081
+              protocol: TCP
+      restartPolicy: Always
