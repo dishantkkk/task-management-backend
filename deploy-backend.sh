@@ -26,7 +26,14 @@ kubectl apply -f $K8S_DIR/
 
 # === STEP 4: Wait for Backend Pod ===
 echo "⏳ Waiting for backend pod to be ready..."
-kubectl wait --for=condition=ready pod -l app=backend --timeout=60s
+kubectl wait --for=condition=ready pod -l app=task-management --timeout=60s
+
+# === STEP 5: Port-Forward Backend Service ===
+echo "🔌 Port-forwarding backend service on http://localhost:8080..."
+kubectl port-forward service/task-management-service 8080:8080 > backend.log 2>&1 &
+BACKEND_PID=$!
+echo $BACKEND_PID > backend.pid
 
 # === DONE ===
-echo "✅ Backend deployed successfully!"
+echo "✅ Backend deployed and accessible at http://localhost:8080"
+echo "🛑 Run 'kill \$(cat backend.pid)' to stop port-forward"
