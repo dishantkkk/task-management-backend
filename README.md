@@ -1,6 +1,3 @@
----
-
-```markdown
 # 📝 Task Management Backend
 
 A **Spring Boot 3.5.0** application for managing tasks with production-ready features including **JWT-based authentication**, **email verification**, **admin panel**, **task scheduling with Redis**, **Kafka-Avro event publishing**, and full observability tooling. Works with a modern React frontend and supports local deployment using **Docker Compose** and **Minikube**.
@@ -191,5 +188,3 @@ public void addCorsMappings(CorsRegistry registry) {
 ## 🙌 Contributions
 
 Feel free to open issues, PRs, or suggestions!
-
----
