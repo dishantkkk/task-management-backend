@@ -1,48 +1,48 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<configuration scan="true">
-
-    <!--<property name="LOG_PATH" value="logs" />
-    <property name="LOG_FILE_NAME" value="app-log" />-->
-
-    <!-- Console appender with color pattern -->
-    <!--<appender name="Console" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder>
-            <pattern>
-                %highlight(%d{yyyy-MM-dd HH:mm:ss.SSS}) [%thread] %-5level %cyan(%logger{36}) - %msg%n
-            </pattern>
-        </encoder>
-    </appender>-->
-    <appender name="Console" class="ch.qos.logback.core.ConsoleAppender">
+<configuration>
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <pattern>
                 %highlight(%d{yyyy-MM-dd HH:mm:ss.SSS}) %magenta([%.-15thread]) %highlight(%-5level) %cyan(%logger{20}) %yellow([%M]) - %msg%n
             </pattern>
         </encoder>
     </appender>
-
-    <!-- Rolling file appender -->
-    <!--<appender name="RollingFile" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${LOG_PATH}/${LOG_FILE_NAME}.log</file>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${LOG_PATH}/${LOG_FILE_NAME}.%d{yyyy-MM-dd}.log</fileNamePattern>
-            <maxHistory>7</maxHistory>
-        </rollingPolicy>
-        <encoder>
-            <pattern>
-                %d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n
-            </pattern>
-        </encoder>
-    </appender>-->
-
     <root level="INFO">
-        <appender-ref ref="Console" />
-        <!--<appender-ref ref="RollingFile" />-->
+    <appender-ref ref="CONSOLE" />
     </root>
 
-    <logger name="com.dishant.tasks" level="DEBUG" />
-    <logger name="org.springframework" level="INFO" />
-    <logger name="org.hibernate.SQL" level="WARN" />
+    <appender name="LOGSTASH" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
+        <destination>logstash:5044</destination> <!-- internal DNS name in Minikube -->
+        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+            <providers>
+                <timestamp />
+                <logLevel />
+                <loggerName />
+                <pattern>
+                    <pattern>
+                        {
+                        "app": "task-manager",
+                        "message": "%message"
+                        }
+                    </pattern>
+                </pattern>
+            </providers>
+        </encoder>
+    </appender>
 
+    <root level="INFO">
+        <appender-ref ref="LOGSTASH"/>
+    </root>
+
+<!--    <appender name="LOGSTASH" class="net.logstash.logback.appender.LogstashTcpSocketAppender">-->
+<!--        <destination>logstash:5044</destination>-->
+<!--        <encoder class="net.logstash.logback.encoder.LogstashEncoder" />-->
+<!--    </appender>-->
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE" />
+        <appender-ref ref="LOGSTASH" />
+    </root>
 </configuration>
 
 <!--
