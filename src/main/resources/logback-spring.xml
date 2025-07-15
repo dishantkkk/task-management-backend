@@ -7,41 +7,15 @@
             </pattern>
         </encoder>
     </appender>
-    <root level="INFO">
-    <appender-ref ref="CONSOLE" />
-    </root>
 
     <appender name="LOGSTASH" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
-        <destination>logstash:5044</destination> <!-- internal DNS name in Minikube -->
-        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
-            <providers>
-                <timestamp />
-                <logLevel />
-                <loggerName />
-                <pattern>
-                    <pattern>
-                        {
-                        "app": "task-manager",
-                        "message": "%message"
-                        }
-                    </pattern>
-                </pattern>
-            </providers>
-        </encoder>
+        <destination>logstash:5044</destination>
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder"/>
     </appender>
 
     <root level="INFO">
         <appender-ref ref="LOGSTASH"/>
-    </root>
-
-<!--    <appender name="LOGSTASH" class="net.logstash.logback.appender.LogstashTcpSocketAppender">-->
-<!--        <destination>logstash:5044</destination>-->
-<!--        <encoder class="net.logstash.logback.encoder.LogstashEncoder" />-->
-<!--    </appender>-->
-
-    <root level="INFO">
         <appender-ref ref="CONSOLE" />
-        <appender-ref ref="LOGSTASH" />
     </root>
 </configuration>
 
