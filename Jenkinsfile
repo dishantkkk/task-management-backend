@@ -11,7 +11,8 @@ pipeline {
   }
 
   stages {
-    stage('Clone GitHub Repo') {
+
+    stage('Checkout Code') {
       steps {
         echo "📥 Cloning repo..."
         git branch: 'main',
@@ -20,23 +21,23 @@ pipeline {
       }
     }
 
-    stage('Build Spring Boot App') {
+    stage('Build Backend (Maven)') {
       steps {
-        echo '🔨 Building Spring Boot JAR...'
-        sh './mvnw clean package -DskipTests'
+        echo '🔨 Building Spring Boot JAR with parallel Maven threads...'
+        sh './mvnw clean package -DskipTests -T 4'
       }
     }
 
-    stage('Build Docker Image') {
+    stage('Build & Tag Docker Image') {
       steps {
         echo "🐳 Building Docker image: ${IMAGE_NAME}"
-        sh "docker build -t $IMAGE_NAME ."
+        sh "docker build --no-cache -t $IMAGE_NAME ."
       }
     }
 
-    stage('Push Docker Image to DockerHub') {
+    stage('Push to DockerHub') {
       steps {
-        echo "🚀 Pushing image to DockerHub: ${IMAGE_NAME}"
+        echo "🚀 Pushing image to DockerHub..."
         withCredentials([usernamePassword(credentialsId: 'docker', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
           sh """
             echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
@@ -46,42 +47,44 @@ pipeline {
       }
     }
 
-    stage('Update Image in Deployment YAML') {
+    stage('Patch Deployment YAML') {
       steps {
-        echo "📝 Updating deployment YAML with image: ${IMAGE_NAME}"
+        echo "📝 Injecting versioned image into K8s YAML..."
         sh "sed -i.bak 's|image: ${DOCKERHUB_USERNAME}/task-management:.*|image: ${IMAGE_NAME}|' $DEPLOYMENT_YAML"
       }
     }
 
-    stage('Deploy Infra Services') {
+    stage('Deploy Infra (once only if needed)') {
+      when {
+        expression { return env.BRANCH_NAME == 'main' }
+      }
       steps {
-        echo "📦 Applying infrastructure YAMLs..."
+        echo "📦 Deploying infra YAMLs (Kafka, Redis, etc)..."
         sh "kubectl apply -f $INFRA_DIR/"
       }
     }
 
-    stage('Deploy Backend to Kubernetes') {
+    stage('Deploy Backend to K8s') {
       steps {
-        echo "☸️ Deploying backend to Kubernetes..."
+        echo "☸️ Applying updated deployment..."
         sh "kubectl apply -f $K8S_DIR/"
       }
     }
 
-    stage('Wait for Backend Pod') {
+    stage('Wait for Pod Ready') {
       steps {
-        echo '⏳ Waiting for pod readiness...'
+        echo '⏳ Waiting for Spring Boot pod readiness...'
         sh 'kubectl wait --for=condition=ready pod -l app=task-management --timeout=120s'
       }
     }
-
   }
 
   post {
     success {
-      echo "✅ Deployment complete with image tag: ${VERSION}"
+      echo "✅ Successfully deployed version: ${VERSION}"
     }
     failure {
-      echo "❌ Build failed!"
+      echo "❌ Build failed. Please check logs."
     }
   }
 }
