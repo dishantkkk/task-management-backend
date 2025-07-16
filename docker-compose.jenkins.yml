@@ -6,18 +6,16 @@ services:
     container_name: jenkins
     user: root
     ports:
-      - "8082:8080"         # Jenkins UI
-      - "50000:50000"       # Jenkins agent port
+      - "8082:8080"
+      - "50000:50000"
     volumes:
       - jenkins_home:/var/jenkins_home
-      - /var/run/docker.sock:/var/run/docker.sock  # Use host Docker
-      - ~/.docker:/root/.docker                    # Docker auth
-      - ~/.kube:/root/.kube                        # kubeconfig
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${HOME}/.docker:/root/.docker
+      - ${HOME}/.kube:/root/.kube
       - /usr/local/bin/kubectl:/usr/local/bin/kubectl
-      - ~/.m2:/root/.m2                            # ✅ Cache Maven dependencies
     environment:
       - JAVA_OPTS=-Djenkins.install.runSetupWizard=false
-    restart: unless-stopped
 
 volumes:
   jenkins_home:
