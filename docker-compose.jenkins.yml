@@ -6,14 +6,14 @@ services:
     container_name: jenkins
     user: root
     ports:
-      - "8082:8080"
-      - "50000:50000"
+      - "8082:8080"   # Jenkins UI
+      - "50000:50000" # Agent
     volumes:
       - jenkins_home:/var/jenkins_home
-      - ${HOME}/.m2:/var/jenkins_home/.m2
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ${HOME}/.docker:/root/.docker
-      - ${HOME}/.kube:/root/.kube
+      - ${HOME}/.m2:/var/jenkins_home/.m2               # Maven caching
+      - /var/run/docker.sock:/var/run/docker.sock       # Access Docker engine
+      - ${HOME}/.docker:/root/.docker                   # Docker credentials
+      - ${HOME}/.kube:/root/.kube                       # Kube config for minikube access
     environment:
       - JAVA_OPTS=-Djenkins.install.runSetupWizard=false
 
