@@ -1,0 +1,11 @@
+FROM jenkins/jenkins:lts
+
+USER root
+
+RUN apt-get update && \
+    apt-get install -y docker.io
+
+# Add this line to ensure kubectl is executable inside container
+RUN chmod +x /usr/local/bin/kubectl
+
+USER jenkins
