@@ -10,10 +10,10 @@ services:
       - "50000:50000"
     volumes:
       - jenkins_home:/var/jenkins_home
+      - ${HOME}/.m2:/var/jenkins_home/.m2
       - /var/run/docker.sock:/var/run/docker.sock
       - ${HOME}/.docker:/root/.docker
       - ${HOME}/.kube:/root/.kube
-      - /usr/local/bin/kubectl:/usr/local/bin/kubectl
     environment:
       - JAVA_OPTS=-Djenkins.install.runSetupWizard=false
 
