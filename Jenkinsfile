@@ -77,6 +77,14 @@ pipeline {
             }
         }
 
+        stage('Update Image Tag in k8s yaml') {
+            steps {
+                sh """
+                    sed 's|image: dishantkkk/task-management:.*|image: ${FULL_IMAGE_NAME}|' k8s/backend-deployment.yaml > k8s/backend-deployment-patched.yaml
+                """
+            }
+        }
+
         stage('Deploy Infra') {
             steps {
                 echo "Deploying infra resources from infra/ folder"
@@ -86,8 +94,11 @@ pipeline {
 
         stage('Deploy App (k8s)') {
             steps {
-                echo "Deploying app resources from k8s/ folder"
-                sh 'kubectl apply -f k8s/'
+                echo "Deploying app using patched k8s yaml"
+                sh '''
+                    kubectl apply -f k8s/backend-deployment-patched.yaml
+                    kubectl apply -f k8s/backend-service.yaml
+                '''
             }
         }
     }
