@@ -21,6 +21,7 @@ pipeline {
         stage('Build') {
             steps {
                 sh 'mvn clean package -DskipTests=false'
+                sh 'echo "Built files:" && ls -lh target'
             }
         }
 
