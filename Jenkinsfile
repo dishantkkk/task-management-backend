@@ -13,7 +13,8 @@ pipeline {
     stages {
         stage('Checkout Code') {
             steps {
-                git credentialsId: 'github-cred', url: 'https://github.com/dishantkkk/task-management-backend.git'
+                git branch: 'main', credentialsId: 'github-cred', url: 'https://github.com/dishantkkk/task-management-backend.git'
+
             }
         }
 
