@@ -3,6 +3,8 @@ pipeline {
 
     environment {
         IMAGE_NAME = "dishantkkk/task-management"
+        IMAGE_TAG = "${env.BUILD_NUMBER}"
+        FULL_IMAGE_NAME = "${IMAGE_NAME}:${IMAGE_TAG}"
         SONAR_SCANNER_HOME = tool 'SonarQubeScanner'
         SONARQUBE = "SonarQubeScanner"
     }
@@ -60,7 +62,7 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t $IMAGE_NAME .'
+                sh 'docker build -t FULL_IMAGE_NAME .'
             }
         }
 
@@ -69,7 +71,7 @@ pipeline {
                 withCredentials([usernamePassword(credentialsId: 'docker-cred', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                     sh '''
                         echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-                        docker push $IMAGE_NAME
+                        docker push FULL_IMAGE_NAME
                     '''
                 }
             }
@@ -91,6 +93,10 @@ pipeline {
     }
 
     post {
+        always {
+            echo "Cleaning up workspace..."
+            cleanWs()
+        }
         success {
             echo '✅ Pipeline completed successfully'
         }
