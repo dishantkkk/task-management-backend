@@ -1,96 +1,72 @@
 pipeline {
-  agent any
+    agent any
 
-  environment {
-    DOCKERHUB_USERNAME = 'dishantkkk'
-    VERSION = "${new Date().format('yyyyMMddHHmmss')}"
-    IMAGE_NAME = "${DOCKERHUB_USERNAME}/task-management:${VERSION}"
-    INFRA_DIR = 'infra'
-    K8S_DIR = 'k8s'
-    DEPLOYMENT_YAML = "${K8S_DIR}/backend-deployment.yaml"
-  }
-
-  options {
-    timestamps()
-    timeout(time: 15, unit: 'MINUTES') // avoid hanging builds
-  }
-
-  stages {
-    stage('Checkout Code') {
-      steps {
-        echo "📥 Cloning repo..."
-        git branch: 'main',
-            url: 'https://github.com/dishantkkk/task-management-backend.git',
-            credentialsId: 'github'
-      }
+    environment {
+        IMAGE_NAME = "dishantkkk/task-management"
+        SONARQUBE_ENV = "SonarQubeScanner"
     }
 
-    stage('Build Backend (Maven)') {
-      steps {
-        echo '🔨 Building Spring Boot JAR with Maven parallel threads...'
-        sh './mvnw clean package -DskipTests -T 4'
-      }
+    tools {
+        maven 'Maven 3'
     }
 
-    stage('Build & Tag Docker Image') {
-      steps {
-        echo "🐳 Building Docker image: ${IMAGE_NAME}"
-        sh """
-          docker build -t ${IMAGE_NAME} .
-        """
-      }
-    }
-
-    stage('Push to DockerHub') {
-      steps {
-        echo "🚀 Pushing image to DockerHub..."
-        withCredentials([usernamePassword(credentialsId: 'docker', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-          sh """
-            echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-            docker push ${IMAGE_NAME}
-          """
+    stages {
+        stage('Checkout Code') {
+            steps {
+                git credentialsId: 'github-cred', url: 'https://github.com/dishantkkk/task-management.git'
+            }
         }
-      }
+
+        stage('Run Tests') {
+            steps {
+                sh 'mvn clean test'
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv("${SONARQUBE_ENV}") {
+                    sh 'mvn sonar:sonar -Dsonar.login=${SONAR_AUTH_TOKEN}'
+                }
+            }
+            environment {
+                SONAR_AUTH_TOKEN = credentials('sonarqube-token')
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                sh 'docker build -t $IMAGE_NAME .'
+            }
+        }
+
+        stage('Docker Login & Push') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'docker-cred', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    sh '''
+                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                        docker push $IMAGE_NAME
+                    '''
+                }
+            }
+        }
+
+        stage('Deploy to Minikube') {
+            steps {
+                sh '''
+                    kubectl apply -f k8s/deployment.yaml
+                    kubectl apply -f k8s/service.yaml
+                '''
+            }
+        }
     }
 
-    stage('Patch Deployment YAML') {
-      steps {
-        echo "📝 Updating deployment YAML with versioned image..."
-        sh "sed -i.bak 's|image: ${DOCKERHUB_USERNAME}/task-management:.*|image: ${IMAGE_NAME}|' ${DEPLOYMENT_YAML}"
-      }
+    post {
+        success {
+            echo 'Pipeline completed successfully ✅'
+        }
+        failure {
+            echo 'Pipeline failed ❌'
+        }
     }
-
-    stage('Deploy Infra (optional)') {
-      when {
-        expression { return env.BRANCH_NAME == null || env.BRANCH_NAME == 'main' }
-      }
-      steps {
-        echo "📦 Applying infra services (Kafka, Redis, etc)..."
-        sh "kubectl apply -f ${INFRA_DIR}/"
-      }
-    }
-
-    stage('Deploy Backend to K8s') {
-      steps {
-        echo "☸️ Applying backend deployment..."
-        sh "kubectl apply -f ${K8S_DIR}/"
-      }
-    }
-
-    stage('Wait for Pod Ready') {
-      steps {
-        echo '⏳ Waiting for pod to become ready...'
-        sh "kubectl wait --for=condition=ready pod -l app=task-management --timeout=120s"
-      }
-    }
-  }
-
-  post {
-    success {
-      echo "✅ Successfully deployed version: ${VERSION}"
-    }
-    failure {
-      echo "❌ Build failed. Check logs above."
-    }
-  }
 }
