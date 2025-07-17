@@ -4,187 +4,186 @@ A **Spring Boot 3.5.0** application for managing tasks with production-ready fea
 
 ---
 
-## 🔐 Authentication & Authorization
+## 🚀 Features
 
-- JWT-based login with Spring Security 6
-- Role-based access (`ROLE_USER`, `ROLE_ADMIN`)
-- Password strength validation during registration
-- Email verification flow (with resend support)
-- Forgot password and reset password functionality
-- Secure endpoint access with `@PreAuthorize` checks
-
----
-
-## 📋 Task Management Features
-
-- Task CRUD: Create, Read, Update, Delete
-- Fields: `title`, `description`, `dueDate`, `flag`, `priority`, `userId`
-- Mark task complete/incomplete using **Flag/Unflag** API
-- Task view includes delete & status toggle actions
-- Filter tasks by priority/status and sort by due date
-- Inline task expansion (drawer view on frontend)
-- Due soon tasks highlighted visually
-- Task comment support (collaboration coming soon)
+- User registration and login with JWT
+- Task creation, editing, deletion
+- Priority and status filters
+- Inline task drawer with complete/flag/delete options
+- Admin panel with user/task management
+- Email notifications
+- Scheduled jobs using ShedLock
+- Profile update and dark mode
+- Full CI/CD pipeline using Jenkins
+- Application metrics and logs in Grafana
 
 ---
 
-## 🕒 Scheduled Task Closure
+## ✅ Prerequisites
 
-- Automatic scheduler to mark overdue tasks as completed
-- Uses **Redis + ShedLock** for distributed locking
-- Execution logs stored in DB (`SchedulerLog` entity)
-- Logs include system timestamps and lock information
+### 🛠️ Core Tools & Runtimes
+- Java 17+
+- Maven
+- Docker
+- kubectl
+- Minikube
+
+### 🧰 Developer Utilities
+- Jenkins (installed via Homebrew)
+- SonarQube (latest version with a configured webhook)
+- ngrok (for exposing local Jenkins/Sonar services)
+- Postman or similar API testing tool (optional)
+
+### 🛢️ Infrastructure & Services
+- MySQL (remote/local – allow Mac IP access)
+- Redis (if using scheduling or caching)
+- Elasticsearch (port-forwarded to `9200`)
+- Logstash (deployed in Minikube)
+- Prometheus (running locally on port `9092`)
+- Grafana (installed via Homebrew with custom config path)
+
+### 📦 Observability Dependencies
+- Spring Boot Actuator (already included)
+- Prometheus config file for scraping actuator metrics
+- Grafana dashboards for:
+    - Metrics (via Prometheus)
+    - Logs (via Elasticsearch)
+
+
+### 🔧 Setup
+
+1. **Update `application.yml`**  
+   Set your **Mac's IP address** in the MySQL `url`:
+   ```yaml
+   spring:
+     datasource:
+       url: jdbc:mysql://<YOUR_MAC_IP>:3306/task_db
+   ```
+
+2. **Run Spring Boot App**
+   ```bash
+   ./mvnw spring-boot:run
+   ```
+
+3. **Port Forward Backend**
+   ```bash
+   kubectl port-forward deployment/task-management-backend-deployment 8080:8080
+   ```
+---
+
+## 📈 Observability Setup
+
+### ✅ Prometheus (on Mac)
+
+Start with:
+```bash
+prometheus --web.listen-address=":9092"
+```
+
+Prometheus scrapes metrics from:
+- Spring Boot (via `/actuator/prometheus`)
+- Node exporter (if enabled)
+- Optional: [Node Exporter](https://prometheus.io/docs/guides/node-exporter/) for system-level metrics.
+
+
+Update `prometheus.yml` targets accordingly.
 
 ---
 
-## 🧑‍💼 Admin Panel Features
+### ✅ Grafana (on Mac)
 
-- Admin dashboard with user and task metrics
-- View all users with their roles
-- Admin-only task insights
-- Secure access with `ROLE_ADMIN`
-- Future: User management, bulk actions, task reassignment
+Start with:
+```bash
+grafana-server --homepath /opt/homebrew/opt/grafana/share/grafana --config ~/grafana-config/grafana.ini
+```
 
----
-
-## 🔁 Kafka + Avro Integration
-
-- Kafka producer to publish task-related events
-- Uses **Avro serialization** and **Schema Registry**
-- Sample task ingestion via `task-data.json` using `TaskEvent`
-- Kafka configuration via environment variables
-- Consumer integration planned
+- Add Prometheus as **data source** (`http://localhost:9092`)
+- Add Elasticsearch as another source for **logs**
+- Create dashboards for:
+    - Metrics: JVM memory, HTTP requests
+    - Logs: from Elasticsearch
+    - Task metrics (e.g., completed/active counts)
 
 ---
 
-## 🧪 Developer Tooling & Observability
+## 📦 Elasticsearch + Logstash
 
-- **Swagger UI** with JWT input for testing APIs
-- **Spring Boot Actuator** health endpoints
-- Structured JSON logs (Logback + Logstash encoder)
-- **SonarQube** integration for code quality
-- **JaCoCo** for code coverage reports
-- Clean DTO usage, layered architecture, and Lombok
+### ✅ Port forward Elasticsearch
+```bash
+kubectl port-forward deployment/elasticsearch-deployment 9200:9200
+```
+
+### ✅ Logstash runs inside Minikube
+Make sure Logstash is configured to listen for logs (JSON format) from the Spring Boot app.
+```
+<destination>logstash:5044</destination>
+```
+Configure your Spring Boot `logback-spring.xml` to send logs to Logstash via TCP.
 
 ---
 
-## ⚙️ Tech Stack
+## 📊 SonarQube
 
-| Component        | Tech                       |
+### ✅ Start SonarQube
+```bash
+cd ~/sonarqube-10.x.x/bin/macosx-universal-64
+./sonar.sh start
+```
+
+- Configure your Spring project with `sonar-project.properties`
+- Use `sonar-scanner` to send code analysis
+
+### ✅ Ngrok for Webhooks (optional)
+- Used this to create a url to add in sonarqube webhook.
+```bash
+ngrok http 9090
+```
+
+Use the public URL in SonarQube to configure webhook to your Jenkins.
+
+---
+
+## 🔄 Jenkins CI/CD Pipeline
+
+### ✅ Start Jenkins (via Homebrew)
+```bash
+brew services start jenkins-lts
+```
+
+## ✅ Optional Utilities
+
+### 🔐 Email Verification & Password Reset
+
+- Spring Boot Mail sender configured
+- Templates sent via `/verify`, `/forgot-password`, etc.
+
+---
+
+## ✅ Admin Panel Features
+
+- View all users and tasks
+- Assign tasks
+- View stats by status, priority
+
+---
+
+## 📁 Important Ports Summary
+
+| Component         | Port                       |
 |------------------|----------------------------|
-| Language         | Java 21                    |
-| Framework        | Spring Boot 3.5.x          |
-| Security         | Spring Security 6, JWT     |
-| DB + ORM         | MySQL, Spring Data JPA     |
-| Messaging        | Apache Kafka + Avro        |
-| Locking/Schedule | Redis + ShedLock Scheduler |
-| DevOps           | Docker Compose, Minikube   |
-| Observability    | Actuator, Logback, SonarQube, JaCoCo |
-| Auth Tools       | JWT, BCrypt, Email Links   |
-| API Docs         | Swagger/OpenAPI            |
+| Backend (Spring) | 8080                       |
+| MySQL (local)    | 3306                       |
+| Frontend (UI)    | 80 (container), 3000 (dev) |
+| Grafana          | 3300                       |
+| Prometheus       | 9092                       |
+| Jenkins          | 9090                       |
+| SonarQube        | 9000                       |
+| Elasticsearch    | 9200                       |
+| Logstash         | 5044                       |
 
 ---
 
-## 🚀 Local Development Setup
+## 👨‍💻 Author
 
-### 🐳 Using Docker Compose
-
-```bash
-docker compose up -d
-```
-
-Services:
-- MySQL
-- Kafka
-- Zookeeper
-- Schema Registry
-- Redis
-
-### 🎯 Run Backend
-
-```bash
-./mvnw spring-boot:run
-```
-
----
-
-## ☸️ Minikube Deployment
-
-### 1. Start Minikube
-
-```bash
-minikube start
-```
-
-### 2. Build & Push Docker Image
-
-```bash
-./deploy-backend.sh
-```
-
-This script:
-- Builds and pushes Docker image to Docker Hub
-- Applies K8s manifests for backend deployment
-- Port-forwards backend service to `localhost:8080`
-
-### 3. CORS Configuration
-
-In `WebConfig.java`:
-
-```java
-public void addCorsMappings(CorsRegistry registry) {
-    registry.addMapping("/**")
-            .allowedOrigins("http://localhost:5173", "http://localhost:3000")
-            .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-            .allowedHeaders("*")
-            .allowCredentials(true);
-}
-```
-
----
-
-## 🌐 API URLs
-
-| Endpoint Type | URL                                 |
-|---------------|--------------------------------------|
-| Swagger UI    | `http://localhost:8080/swagger-ui/` |
-| Auth          | `/v1/api/auth/login`, `/register`, etc |
-| Tasks         | `/v1/api/tasks` (CRUD)              |
-| Admin APIs    | `/v1/api/admin/...`                 |
-| Scheduler     | Auto-runs via ShedLock              |
-
----
-
-## ✅ Functional Summary
-
-| Feature                                 | Status   |
-|----------------------------------------|----------|
-| JWT Login + Role-Based Auth            | ✅ Done  |
-| Email Verification + Resend Link       | ✅ Done  |
-| Forgot & Reset Password Flow           | ✅ Done  |
-| Task CRUD + Completion Toggle          | ✅ Done  |
-| Inline Task Drawer View (Frontend)     | ✅ Done  |
-| Kafka Producer + Avro Schema Registry  | ✅ Done  |
-| Redis + ShedLock Task Scheduler        | ✅ Done  |
-| Admin Dashboard (user/task metrics)    | ✅ Done  |
-| Swagger, Actuator, Sonar, Jacoco       | ✅ Done  |
-| Minikube + Docker Compose Support      | ✅ Done  |
-
----
-
-## 🔮 Future Enhancements
-
-- Pagination & filtering in task APIs
-- Task labels, categories, and metadata
-- Task comments and collaboration notes
-- Admin user management (edit/delete roles)
-- Audit logs & changelogs
-- Prometheus + Grafana integration
-- CI/CD pipeline using GitHub Actions
-- Email/SMS alerts for due tasks
-
----
-
-## 🙌 Contributions
-
-Feel free to open issues, PRs, or suggestions!
+Dishant Kushwaha  
+© 2025
