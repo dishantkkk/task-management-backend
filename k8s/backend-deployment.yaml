@@ -14,6 +14,6 @@ spec:
     spec:
       containers:
         - name: task-management
-          image: dishantkkk/task-management:20250715211748
+          image: dishantkkk/task-management:latest
           ports:
             - containerPort: 8080
