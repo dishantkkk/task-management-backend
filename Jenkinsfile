@@ -3,7 +3,8 @@ pipeline {
 
     environment {
         IMAGE_NAME = "dishantkkk/task-management"
-        SONARQUBE_ENV = "SonarQubeScanner"
+        SONAR_SCANNER_HOME = tool 'SonarQubeScanner'
+        SONARQUBE = "SonarQubeScanner"
     }
 
     tools {
@@ -13,21 +14,31 @@ pipeline {
     stages {
         stage('Checkout Code') {
             steps {
-                git branch: 'main', credentialsId: 'github-cred', url: 'https://github.com/dishantkkk/task-management-backend.git'
-
+                checkout scm
             }
         }
 
-        stage('Run Tests') {
+        stage('Build') {
+              steps {
+                sh 'mvn clean install -DskipTests=false'
+              }
+            }
+
+        stage('Test with Coverage') {
             steps {
-                sh 'mvn clean test'
+                sh 'mvn test'
             }
         }
 
         stage('SonarQube Analysis') {
             steps {
-                withSonarQubeEnv("${SONARQUBE_ENV}") {
-                    sh 'mvn sonar:sonar -Dsonar.login=${SONAR_AUTH_TOKEN}'
+                withSonarQubeEnv("${SONARQUBE}") {
+                    sh "${env.SONAR_SCANNER_HOME}/bin/sonar-scanner \
+                            -Dsonar.projectKey=task-management \
+                            -Dsonar.sources=src/main/java \
+                            -Dsonar.tests=src/test/java \
+                            -Dsonar.java.binaries=target/classes \
+                            -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml"
                 }
             }
             environment {
@@ -35,13 +46,21 @@ pipeline {
             }
         }
 
+        stage('Quality Gate') {
+              steps {
+                timeout(time: 2, unit: 'MINUTES') {
+                  waitForQualityGate abortPipeline: true
+                }
+              }
+            }
+
         stage('Build Docker Image') {
             steps {
                 sh 'docker build -t $IMAGE_NAME .'
             }
         }
 
-        stage('Docker Login & Push') {
+        stage('Docker Push') {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'docker-cred', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                     sh '''
@@ -52,11 +71,18 @@ pipeline {
             }
         }
 
+        stage('Infra deployment') {
+            steps {
+                sh '''
+                    kubectl apply -f infra/
+                '''
+            }
+        }
+
         stage('Deploy to Minikube') {
             steps {
                 sh '''
-                    kubectl apply -f k8s/deployment.yaml
-                    kubectl apply -f k8s/service.yaml
+                    kubectl apply -f k8s/
                 '''
             }
         }
