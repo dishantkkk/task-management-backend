@@ -1,5 +1,5 @@
 # .dockerignore
-target/
+#target/
 .git
 node_modules/
 *.log
