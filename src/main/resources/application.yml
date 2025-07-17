@@ -5,7 +5,7 @@ spring:
   application:
     name: task-management
   datasource:
-    url: jdbc:mysql://192.168.1.2:3306/task_db
+    url: jdbc:mysql://192.168.1.4:3306/task_db
     username: taskuser
     password: taskpass
     driver: com.mysql.cj.jdbc.Driver
