@@ -8,7 +8,7 @@ WORKDIR /app
 ENV JAVA_OPTS="-XX:+UseContainerSupport -Djava.security.egd=file:/dev/./urandom"
 
 # Ensure predictable jar name from Maven
-COPY target/task-management.jar app.jar
+COPY target/task-management-*.jar app.jar
 
 # Expose Spring Boot default port
 EXPOSE 8080

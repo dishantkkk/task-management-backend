@@ -19,10 +19,10 @@ pipeline {
         }
 
         stage('Build') {
-              steps {
-                sh 'mvn clean install -DskipTests=false'
-              }
+            steps {
+                sh 'mvn clean package -DskipTests=false'
             }
+        }
 
         stage('Test with Coverage') {
             steps {
@@ -31,28 +31,31 @@ pipeline {
         }
 
         stage('SonarQube Analysis') {
-            steps {
-                withSonarQubeEnv("${SONARQUBE}") {
-                    sh "${env.SONAR_SCANNER_HOME}/bin/sonar-scanner \
-                            -Dsonar.projectKey=task-management \
-                            -Dsonar.sources=src/main/java \
-                            -Dsonar.tests=src/test/java \
-                            -Dsonar.java.binaries=target/classes \
-                            -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml"
-                }
-            }
             environment {
                 SONAR_AUTH_TOKEN = credentials('sonarqube-token')
+            }
+            steps {
+                withSonarQubeEnv("${SONARQUBE}") {
+                    sh """
+                        ${env.SONAR_SCANNER_HOME}/bin/sonar-scanner \
+                        -Dsonar.projectKey=task-management \
+                        -Dsonar.sources=src/main/java \
+                        -Dsonar.tests=src/test/java \
+                        -Dsonar.java.binaries=target/classes \
+                        -Dsonar.login=$SONAR_AUTH_TOKEN \
+                        -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
+                    """
+                }
             }
         }
 
         stage('Quality Gate') {
-              steps {
+            steps {
                 timeout(time: 2, unit: 'MINUTES') {
-                  waitForQualityGate abortPipeline: true
+                    waitForQualityGate abortPipeline: true
                 }
-              }
             }
+        }
 
         stage('Build Docker Image') {
             steps {
@@ -71,29 +74,27 @@ pipeline {
             }
         }
 
-        stage('Infra deployment') {
+        stage('Deploy Infra') {
             steps {
-                sh '''
-                    kubectl apply -f infra/
-                '''
+                echo "Deploying infra resources from infra/ folder"
+                sh 'kubectl apply -f infra/'
             }
         }
 
-        stage('Deploy to Minikube') {
+        stage('Deploy App (k8s)') {
             steps {
-                sh '''
-                    kubectl apply -f k8s/
-                '''
+                echo "Deploying app resources from k8s/ folder"
+                sh 'kubectl apply -f k8s/'
             }
         }
     }
 
     post {
         success {
-            echo 'Pipeline completed successfully ✅'
+            echo '✅ Pipeline completed successfully'
         }
         failure {
-            echo 'Pipeline failed ❌'
+            echo '❌ Pipeline failed'
         }
     }
 }
