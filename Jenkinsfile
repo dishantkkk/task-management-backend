@@ -10,6 +10,11 @@ pipeline {
     DEPLOYMENT_YAML = "${K8S_DIR}/backend-deployment.yaml"
   }
 
+  options {
+    timestamps()
+    timeout(time: 15, unit: 'MINUTES') // avoid hanging builds
+  }
+
   stages {
     stage('Checkout Code') {
       steps {
@@ -30,10 +35,9 @@ pipeline {
     stage('Build & Tag Docker Image') {
       steps {
         echo "🐳 Building Docker image: ${IMAGE_NAME}"
-        sh '''
-          export DOCKER_BUILDKIT=0
-          docker build -t $IMAGE_NAME .
-        '''
+        sh """
+          docker build -t ${IMAGE_NAME} .
+        """
       }
     }
 
@@ -41,10 +45,10 @@ pipeline {
       steps {
         echo "🚀 Pushing image to DockerHub..."
         withCredentials([usernamePassword(credentialsId: 'docker', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-          sh '''
+          sh """
             echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-            docker push $IMAGE_NAME
-          '''
+            docker push ${IMAGE_NAME}
+          """
         }
       }
     }
@@ -52,31 +56,31 @@ pipeline {
     stage('Patch Deployment YAML') {
       steps {
         echo "📝 Updating deployment YAML with versioned image..."
-        sh "sed -i.bak 's|image: ${DOCKERHUB_USERNAME}/task-management:.*|image: ${IMAGE_NAME}|' $DEPLOYMENT_YAML"
+        sh "sed -i.bak 's|image: ${DOCKERHUB_USERNAME}/task-management:.*|image: ${IMAGE_NAME}|' ${DEPLOYMENT_YAML}"
       }
     }
 
     stage('Deploy Infra (optional)') {
       when {
-        expression { return env.BRANCH_NAME == 'main' }
+        expression { return env.BRANCH_NAME == null || env.BRANCH_NAME == 'main' }
       }
       steps {
         echo "📦 Applying infra services (Kafka, Redis, etc)..."
-        sh "kubectl apply -f $INFRA_DIR/"
+        sh "kubectl apply -f ${INFRA_DIR}/"
       }
     }
 
     stage('Deploy Backend to K8s') {
       steps {
         echo "☸️ Applying backend deployment..."
-        sh "kubectl apply -f $K8S_DIR/"
+        sh "kubectl apply -f ${K8S_DIR}/"
       }
     }
 
     stage('Wait for Pod Ready') {
       steps {
         echo '⏳ Waiting for pod to become ready...'
-        sh 'kubectl wait --for=condition=ready pod -l app=task-management --timeout=120s'
+        sh "kubectl wait --for=condition=ready pod -l app=task-management --timeout=120s"
       }
     }
   }
