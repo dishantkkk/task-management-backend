@@ -6,7 +6,6 @@ spring:
     name: task-management
   datasource:
     url: ${DATABASE_URL:jdbc:mysql://<mac_ip>:3306/task_db}
-
     username: taskuser
     password: taskpass
     driver: com.mysql.cj.jdbc.Driver
